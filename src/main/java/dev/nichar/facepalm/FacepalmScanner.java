@@ -11,6 +11,7 @@ import lombok.*;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -32,29 +33,33 @@ public class FacepalmScanner {
 
     @Named @Singleton
     public static class FacepalmRunner {
-        @Inject private Log log;
+        @Inject private @Nullable Log log;
         @Inject private FacepalmScanner.ScannerEngine engine;
         @Inject private FacepalmScanner.GitIgnoreService gitIgnoreService;
         @Inject private FacepalmScanner.Reporter reporter;
 
-        public void run(Path root, FacepalmScanner.ScoringConfig scoring, Path outputDir, String version)
+        private Log getLog() {
+            return log != null ? log : new org.apache.maven.plugin.logging.SystemStreamLog();
+        }
+
+        public void run(Path root, FacepalmConfig config, Path outputDir, String version)
             throws Exception {
             gitIgnoreService.loadAllGitIgnores(root);
             List<FacepalmScanner.Finding> findings = engine.scan(root);
             FacepalmScanner.ScanStatistics stats = engine.getStats();
-            reporter.printResults(findings, scoring);
+            reporter.printResults(findings, config.getScoring());
             reporter.printStats(stats);
             reporter.performReporting(findings, stats, root.toString(), version, outputDir);
 
-            long errors   = findings.stream().filter(f -> f.getSeverity(scoring) == FacepalmScanner.Severity.ERROR).count();
-            long warnings = findings.stream().filter(f -> f.getSeverity(scoring) == FacepalmScanner.Severity.WARNING).count();
-            checkFailureConditions(errors, warnings, scoring);
+            long errors   = findings.stream().filter(f -> f.getSeverity(config.getScoring()) == FacepalmScanner.Severity.ERROR).count();
+            long warnings = findings.stream().filter(f -> f.getSeverity(config.getScoring()) == FacepalmScanner.Severity.WARNING).count();
+            checkFailureConditions(errors, warnings, config.getScoring());
         }
 
         private void checkFailureConditions(long errors, long warnings, FacepalmScanner.ScoringConfig scoring)
             throws MojoFailureException {
             if (!scoring.isFailOnError() && scoring.isFailOnWarnings()) {
-                log.warn("Unusual configuration: failOnError=false with failOnWarnings=true");
+                getLog().warn("Unusual configuration: failOnError=false with failOnWarnings=true");
             }
             if (scoring.isFailOnError() && errors > 0) {
                 throw new MojoFailureException("Facepalm scan failed: " + errors + " critical findings detected.");
@@ -158,11 +163,11 @@ public class FacepalmScanner {
         private final ScanStatistics stats = new ScanStatistics();
 
         @Inject
-        public ScannerEngine(Log log, EngineConfig engineConfig,
+        public ScannerEngine(@Nullable Log log, EngineConfig engineConfig,
                              List<SecretExtractor> extractors,
                              List<FindingEvaluator> evaluators,
                              List<FileFindingsPostProcessor> fileProcessors) {
-            this.log = log;
+            this.log = log != null ? log : new org.apache.maven.plugin.logging.SystemStreamLog();
             this.engineConfig = engineConfig;
             this.extractors = extractors;
             this.evaluators = evaluators;
@@ -529,8 +534,8 @@ public class FacepalmScanner {
         private final TreeMap<Path, List<PathMatcher>> registry = new TreeMap<>();
 
         @Inject
-        public GitIgnoreService(Log log) {
-            this.log = log;
+        public GitIgnoreService(@Nullable Log log) {
+            this.log = log != null ? log : new org.apache.maven.plugin.logging.SystemStreamLog();
         }
 
         public void loadAllGitIgnores(Path root) {
@@ -701,8 +706,8 @@ public class FacepalmScanner {
         private final Configuration cfg;
 
         @Inject
-        public Reporter(Log log) {
-            this.log = log;
+        public Reporter(@Nullable Log log) {
+            this.log = log != null ? log : new org.apache.maven.plugin.logging.SystemStreamLog();
             this.cfg = new Configuration(Configuration.VERSION_2_3_32);
             this.cfg.setClassForTemplateLoading(FacepalmScanner.class, "/templates");
             this.cfg.setDefaultEncoding("UTF-8");

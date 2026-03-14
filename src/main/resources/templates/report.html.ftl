@@ -148,7 +148,7 @@
 
 <aside class="sidebar">
     <div style="display:flex; justify-content:space-between; align-items:center">
-        <strong style="font-size: 1.2rem;">🛡️ GitGuardian</strong>
+        <strong style="font-size: 1.2rem;">Facepalm Maven Plugin</strong>
         <button class="theme-btn" onclick="toggleTheme()">🌓</button>
     </div>
     <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.8rem; text-align: center;">

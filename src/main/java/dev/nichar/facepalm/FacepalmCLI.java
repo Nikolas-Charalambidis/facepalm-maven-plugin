@@ -3,9 +3,7 @@ package dev.nichar.facepalm;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
-import org.apache.maven.plugin.logging.SystemStreamLog; // Fallback if needed
 import org.codehaus.plexus.logging.Logger;
 import org.codehaus.plexus.logging.console.ConsoleLogger;
 import org.eclipse.sisu.space.BeanScanning;
@@ -16,11 +14,12 @@ import org.eclipse.sisu.wire.WireModule;
 import javax.inject.Inject;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
+
 
 public class FacepalmCLI {
 
     // Only inject stateless services
+    @Inject private FacepalmScanner.FacepalmContext context;
     @Inject private FacepalmScanner.FacepalmRunner runner;
 
     public static void main(String[] args) {
@@ -41,12 +40,15 @@ public class FacepalmCLI {
         try {
             // Instantiate your config (normally you'd parse CLI args into this object)
             FacepalmConfig cliConfig = new FacepalmConfig();
+            context.set(cliConfig);
 
             // Execute the stateless runner
-            runner.run(root, cliConfig, Paths.get("target"), "1.0.0-CLI");
+            runner.run(root, Paths.get("target"), "1.0.0-CLI");
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(1);
+        } finally {
+            context.clear();
         }
     }
 

@@ -22,24 +22,32 @@ public class FacepalmMojo extends AbstractMojo {
 
     // Maven natively populates this complex object if you use nested XML
     // tags like <config><engine><threads>4</threads></engine></config>
-    @Parameter
-    private FacepalmConfig config = new FacepalmConfig();
+    @Parameter private FacepalmScanner.EngineConfig engine = new FacepalmScanner.EngineConfig();
+    @Parameter private FacepalmScanner.ScoringConfig scoring = new FacepalmScanner.ScoringConfig();
+    @Parameter private FacepalmScanner.EvaluatorConfig evaluators = new FacepalmScanner.EvaluatorConfig();
+    @Parameter private FacepalmScanner.PostProcessorConfig postProcessing = new FacepalmScanner.PostProcessorConfig();
+    @Parameter private FacepalmScanner.PatternConfig patterns = new FacepalmScanner.PatternConfig();
 
-    // Inject ONLY stateless services.
-    @Inject
-    private FacepalmScanner.FacepalmRunner sisuFacepalmRunner;
+    // Only inject stateless services
+    @Inject private FacepalmScanner.FacepalmContext context;
+    @Inject private FacepalmScanner.FacepalmRunner runner;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         Path root = baseDir.toPath().toAbsolutePath().normalize();
+        final var config = new FacepalmConfig(engine, scoring, evaluators, postProcessing, patterns);
+        getLog().info("Configuration " + config);
+        context.set(config);
 
         try {
             // Pass the configuration down the stack. Do not rely on injected state.
-            sisuFacepalmRunner.run(root, config, outputDirectory.toPath(), "1.0.0");
+            runner.run(root, outputDirectory.toPath(), "1.0.0");
         } catch (MojoFailureException e) {
             throw e;
         } catch (Exception e) {
             throw new MojoExecutionException("Error during facepalm scan", e);
+        } finally {
+            context.clear();
         }
     }
 }

@@ -44,6 +44,8 @@ import javax.inject.Singleton;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
 
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateExceptionHandler;
@@ -61,34 +63,36 @@ import tools.jackson.databind.node.ObjectNode;
 
 public class FacepalmScanner {
 
-    @Named
-    @Singleton
-    public static class FacepalmContext {
+    @RequiredArgsConstructor
+    public static class LogModule extends AbstractModule {
 
-        // ThreadLocal ensures Thread-1 (Project A) never sees Thread-2's (Project B) data
-        private final ThreadLocal<FacepalmConfig> configStore = new ThreadLocal<>();
+        private final Log log;
 
-        public void set(FacepalmConfig config) {
-            configStore.set(config);
+        @Override
+        protected void configure() {
+            bind(Log.class).toInstance(log);
+        }
+    }
+
+    public static class FacepalmConfigModule extends AbstractModule {
+
+        private final FacepalmConfig config;
+
+        public FacepalmConfigModule(FacepalmConfig config) {
+            this.config = config;
         }
 
-        public FacepalmConfig get() {
-            FacepalmConfig config = configStore.get();
-            if (config == null) {
-                throw new IllegalStateException("FacepalmContext accessed outside of Mojo execution!");
-            }
+        @Provides
+        @Singleton
+        FacepalmConfig provideConfig() {
             return config;
-        }
-
-        public void clear() {
-            configStore.remove(); // Essential to prevent memory leaks and "ghost" configs
         }
     }
 
     @Named @Singleton
     public static class FacepalmRunner {
         @Inject private @Nullable Log log;
-        @Inject private FacepalmScanner.FacepalmContext context;
+        @Inject private dev.nichar.facepalm.FacepalmConfig context;
         @Inject private FacepalmScanner.ScannerEngine engine;
         @Inject private FacepalmScanner.GitIgnoreService gitIgnoreService;
         @Inject private FacepalmScanner.Reporter reporter;
@@ -108,7 +112,7 @@ public class FacepalmScanner {
             reporter.printStats(stats);
             reporter.performReporting(findings, stats, root.toString(), version, outputDir);
 
-            final var scoring = context.get().getScoring();
+            final var scoring = context.getScoring();
             long errors   = findings.stream().filter(f -> f.getSeverity(scoring) == FacepalmScanner.Severity.ERROR).count();
             long warnings = findings.stream().filter(f -> f.getSeverity(scoring) == FacepalmScanner.Severity.WARNING).count();
             checkFailureConditions(errors, warnings);
@@ -116,7 +120,7 @@ public class FacepalmScanner {
 
         private void checkFailureConditions(long errors, long warnings)
             throws MojoFailureException {
-            final var scoring = context.get().getScoring();
+            final var scoring = context.getScoring();
             if (!scoring.isFailOnError() && scoring.isFailOnWarnings()) {
                 getLog().warn("Unusual configuration: failOnError=false with failOnWarnings=true");
             }
@@ -214,7 +218,7 @@ public class FacepalmScanner {
     @Singleton
     public static class ScannerEngine {
         private final Log log;
-        @Inject private FacepalmContext facepalmContext;
+        @Inject private dev.nichar.facepalm.FacepalmConfig context;
         @Inject private List<SecretExtractor> extractors;
         @Inject private List<FindingEvaluator> evaluators;
         @Inject private List<FileFindingsPostProcessor> fileProcessors;
@@ -228,7 +232,7 @@ public class FacepalmScanner {
 
         public List<Finding> scan(Path root) throws InterruptedException, IOException {
             // 1. Capture the config on the MAIN thread
-            final FacepalmConfig currentConfig = facepalmContext.get();
+            final dev.nichar.facepalm.FacepalmConfig currentConfig = context;
             final var engineConfig = currentConfig.getEngine();
 
             List<Callable<List<Finding>>> tasks = new ArrayList<>();
@@ -242,12 +246,12 @@ public class FacepalmScanner {
                         tasks.add(() -> {
                             try {
                                 // This happens INSIDE the Executor thread
-                                facepalmContext.set(currentConfig);
+                                //context.set(currentConfig);
                                 return processFile(path);
                             } finally {
                                 // CRITICAL: Clean up so the next task on this thread
                                 // doesn't start with stale data
-                                facepalmContext.clear();
+                                //context.clear();
                             }
                         });
                     });
@@ -282,7 +286,7 @@ public class FacepalmScanner {
         }
 
         private boolean shouldScan(Path path, ScanStatistics stats) {
-            final var engineConfig = facepalmContext.get().getEngine();
+            final var engineConfig = context.getEngine();
             Set<String> skipDirs = engineConfig.getEffectiveSkipDirs();
             for (Path element : path) {
                 if (skipDirs.contains(element.toString())) {
@@ -318,7 +322,7 @@ public class FacepalmScanner {
         }
 
         private List<Finding> processFile(Path path) {
-            final var engineConfig = facepalmContext.get().getEngine();
+            final var engineConfig = context.getEngine();
 
             if (engineConfig.isShowProcessed()) {
                 log.debug("Processing file: " + path);
@@ -360,13 +364,13 @@ public class FacepalmScanner {
     @Named
     @Singleton
     public static class RegexSecretExtractor implements SecretExtractor {
-        @Inject private FacepalmContext facepalmContext;
+        @Inject private dev.nichar.facepalm.FacepalmConfig config;
 
         @Override
         public List<Finding> extract(FileContext context) {
             List<Finding> findings = new ArrayList<>();
             Set<String> localDedup = new HashSet<>();
-            List<SecretPattern> activePatterns = facepalmContext.get().getPatterns().getEffective();
+            List<SecretPattern> activePatterns = config.getPatterns().getEffective();
 
             for (int i = 0; i < context.getLines().size(); i++) {
                 String rawLine = context.getLines().get(i);
@@ -430,15 +434,15 @@ public class FacepalmScanner {
     @Named
     @Singleton
     public static class FileExtensionEvaluator implements FindingEvaluator {
-        @Inject private FacepalmContext facepalmContext;
+        @Inject private dev.nichar.facepalm.FacepalmConfig config;
 
         @Override
         public void evaluate(Finding finding, FileContext context) {
             String fileName = context.getPath().getFileName().toString().toLowerCase();
 
-            if (facepalmContext.get().getEvaluators().getHighRiskExts().stream().anyMatch(fileName::endsWith)) {
+            if (config.getEvaluators().getHighRiskExts().stream().anyMatch(fileName::endsWith)) {
                 finding.log("High Risk Configuration File", 15, 20);
-            } else if (facepalmContext.get().getEvaluators().getLowRiskExts().stream().anyMatch(fileName::endsWith)) {
+            } else if (config.getEvaluators().getLowRiskExts().stream().anyMatch(fileName::endsWith)) {
                 finding.log("Documentation/Log File", -30, -40);
             }
         }
@@ -465,20 +469,20 @@ public class FacepalmScanner {
     @Named
     @Singleton
     public static class PlaceholderSuppressorEvaluator implements FindingEvaluator {
-        @Inject private FacepalmContext facepalmContext;
+        @Inject private dev.nichar.facepalm.FacepalmConfig config;
 
         @Override
         public void evaluate(Finding finding, FileContext context) {
             String val = finding.getSecretValue().trim().replaceAll("[,;\"']+$", "");
 
-            final var config = facepalmContext.get().getEvaluators();
-            if (config.getInterpolationPattern().matcher(val).matches()) {
+            final var conf = config.getEvaluators();
+            if (conf.getInterpolationPattern().matcher(val).matches()) {
                 finding.log("Interpolation/Placeholder Shield", -50, -100);
                 return;
             }
 
             String lowerVal = val.toLowerCase().replace("-", "_").replace(" ", "_");
-            if (config.getDummyKeywords().stream().anyMatch(lowerVal::contains)) {
+            if (conf.getDummyKeywords().stream().anyMatch(lowerVal::contains)) {
                 finding.log("Dummy Keyword Penalty", 0, -80);
             }
         }
@@ -487,18 +491,18 @@ public class FacepalmScanner {
     @Named
     @Singleton
     public static class LocationEvaluator implements FindingEvaluator {
-        @Inject private FacepalmContext facepalmContext;
+        @Inject private dev.nichar.facepalm.FacepalmConfig config;
 
         @Override
         public void evaluate(Finding finding, FileContext context) {
             String path = context.getPath().toString().toLowerCase();
 
-            final var config = facepalmContext.get().getEvaluators();
-            if (config.getProdPathMarkers().stream().anyMatch(path::contains)) {
+            final var conf = config.getEvaluators();
+            if (conf.getProdPathMarkers().stream().anyMatch(path::contains)) {
                 finding.log("Production Path Marker", 20, 0);
             }
 
-            if (config.getTestPathMarkers().stream().anyMatch(path::contains)) {
+            if (conf.getTestPathMarkers().stream().anyMatch(path::contains)) {
                 finding.log("Test/Mock Path Marker", -30, -20);
             }
         }
@@ -507,7 +511,7 @@ public class FacepalmScanner {
     @Named
     @Singleton
     public static class SurroundingContextEvaluator implements FindingEvaluator {
-        @Inject private FacepalmContext facepalmContext;
+        @Inject private dev.nichar.facepalm.FacepalmConfig config;
 
         @Override
         public void evaluate(Finding finding, FileContext context) {
@@ -516,11 +520,11 @@ public class FacepalmScanner {
                 context.getLineOrEmpty(idx) + " " +
                 context.getLineOrEmpty(idx + 1)).toLowerCase();
 
-            final var config = facepalmContext.get().getEvaluators();
-            if (config.getMockContextMarkers().stream().anyMatch(chunk::contains)) {
+            final var conf = config.getEvaluators();
+            if (conf.getMockContextMarkers().stream().anyMatch(chunk::contains)) {
                 finding.log("Mock Context Keywords Found", 0, -40);
             }
-            if (config.getProdContextMarkers().stream().anyMatch(chunk::contains)) {
+            if (conf.getProdContextMarkers().stream().anyMatch(chunk::contains)) {
                 finding.log("Production Context Keywords Found", 20, 0);
             }
         }
@@ -557,7 +561,7 @@ public class FacepalmScanner {
     @Named
     @Singleton
     public static class CompositeScoringPostProcessor implements FileFindingsPostProcessor {
-        @Inject private FacepalmContext facepalmContext;
+        @Inject private dev.nichar.facepalm.FacepalmConfig config;
 
         @Override
         public void process(List<Finding> fileFindings, FileContext context) {
@@ -569,10 +573,10 @@ public class FacepalmScanner {
                 .distinct()
                 .count();
 
-            final var config = facepalmContext.get().getPostProcessing();
+            final var conf = config.getPostProcessing();
             for (Finding f : fileFindings) {
-                if (totalInFile > config.getHighVolumeThreshold()) {
-                    f.log("High Volume File (Threshold: " + config.getHighVolumeThreshold() + ")", -25, -30);
+                if (totalInFile > conf.getHighVolumeThreshold()) {
+                    f.log("High Volume File (Threshold: " + conf.getHighVolumeThreshold() + ")", -25, -30);
                 }
                 else if (uniquePatterns > 1) {
                     f.log("Composite Risk: Multiple distinct secrets in one file", 15, 10);
@@ -757,13 +761,13 @@ public class FacepalmScanner {
     @Singleton
     public static class Reporter {
 
-        @Inject private FacepalmContext facepalmContext;
+        @Inject private dev.nichar.facepalm.FacepalmConfig context;
 
         private final Log log;
         private final Configuration cfg;
 
         @Inject
-        public Reporter(@Nullable Log log, FacepalmContext context) {
+        public Reporter(@Nullable Log log, FacepalmConfig context) {
             this.log = log != null ? log : new org.apache.maven.plugin.logging.SystemStreamLog();
             this.cfg = new Configuration(Configuration.VERSION_2_3_32);
             this.cfg.setClassForTemplateLoading(FacepalmScanner.class, "/templates");
@@ -895,7 +899,7 @@ public class FacepalmScanner {
                 log.info(SEPARATOR);
             }
 
-            final var scoringConfig = facepalmContext.get().getScoring();
+            final var scoringConfig = context.getScoring();
             if (scoringConfig.isShowDetails()) {
                 findings.stream()
                     .filter(f -> f.getSeverity(scoringConfig) != Severity.INFO)

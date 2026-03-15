@@ -19,14 +19,25 @@ import java.nio.file.Paths;
 public class FacepalmCLI {
 
     // Only inject stateless services
-    @Inject private FacepalmScanner.FacepalmContext context;
+    @Inject private FacepalmConfig context;
     @Inject private FacepalmScanner.FacepalmRunner runner;
+
+
 
     public static void main(String[] args) {
         Path root = Paths.get(args.length > 0 ? args[0] : ".").toAbsolutePath().normalize();
 
         Injector injector = Guice.createInjector(
             new WireModule(
+                new FacepalmScanner.FacepalmConfigModule(
+                        new FacepalmConfig(
+                        new FacepalmScanner.EngineConfig(),
+                        new FacepalmScanner.ScoringConfig(),
+                        new FacepalmScanner.EvaluatorConfig(),
+                        new FacepalmScanner.PostProcessorConfig(),
+                        new FacepalmScanner.PatternConfig()
+                    )
+                ),
                 new SpaceModule(new URLClassSpace(FacepalmCLI.class.getClassLoader()), BeanScanning.CACHE),
                 new CliModule()
             )
@@ -38,9 +49,12 @@ public class FacepalmCLI {
 
     private void run(Path root) {
         try {
+
+            //log().info("Configuration " + context.get());
+
             // Instantiate your config (normally you'd parse CLI args into this object)
-            FacepalmConfig cliConfig = new FacepalmConfig();
-            context.set(cliConfig);
+
+            //context.set(cliConfig);
 
             // Execute the stateless runner
             runner.run(root, Paths.get("target"), "1.0.0-CLI");
@@ -48,7 +62,7 @@ public class FacepalmCLI {
             e.printStackTrace();
             System.exit(1);
         } finally {
-            context.clear();
+            //context.clear();
         }
     }
 

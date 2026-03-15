@@ -44,8 +44,8 @@ import javax.inject.Singleton;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
+import dev.nichar.facepalm.config.ScoringConfig;
+import dev.nichar.facepalm.pattern.SecretPattern;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateExceptionHandler;
@@ -62,32 +62,6 @@ import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
 public class FacepalmScanner {
-
-    @RequiredArgsConstructor
-    public static class LogModule extends AbstractModule {
-
-        private final Log log;
-
-        @Override
-        protected void configure() {
-            bind(Log.class).toInstance(log);
-        }
-    }
-
-    public static class FacepalmConfigModule extends AbstractModule {
-
-        private final FacepalmConfig config;
-
-        public FacepalmConfigModule(FacepalmConfig config) {
-            this.config = config;
-        }
-
-        @Provides
-        @Singleton
-        FacepalmConfig provideConfig() {
-            return config;
-        }
-    }
 
     @Named @Singleton
     public static class FacepalmRunner {
@@ -130,87 +104,6 @@ public class FacepalmScanner {
             if (scoring.isFailOnWarnings() && warnings > 0) {
                 throw new MojoFailureException("Facepalm scan failed: " + warnings + " warnings detected and failOnWarnings is true.");
             }
-        }
-    }
-
-    @Data
-    //@Singleton
-    //@Named
-    public static class EngineConfig {
-        private int threads = Runtime.getRuntime().availableProcessors();
-        private long maxFileSizeBytes = 5 * 1024 * 1024;
-        private String skipBinaryRegex = ".*\\.(png|jpg|jpeg|gif|pdf|zip|jar|class|tar|gz|exe|dll)$";
-        private Set<String> skipDirs;
-        private boolean showProcessed = false;
-        private boolean showSkipped = false;
-        private static final Set<String> DEFAULTS = Set.of(".git", ".idea");
-
-        public Set<String> getEffectiveSkipDirs() {
-            return skipDirs != null ? skipDirs : DEFAULTS;
-        }
-    }
-
-    @Data
-    //@Singleton
-    //@Named
-    public static class ScoringConfig {
-        private int errorThreshold = 80;
-        private int warningThreshold = 40;
-        private boolean showDetails = false;
-        private boolean failOnError = true;
-        private boolean failOnWarnings = false;
-    }
-
-    @Data
-    //@Singleton
-    //@Named
-    public static class EvaluatorConfig {
-        private String interpolationPatternRegex = ".*?(?:\\$\\{.*}|\\{\\{.*}|<.*>|%.*%|\\[.*]).*";
-        private Pattern interpolationPattern;
-
-        private Set<String> highRiskExtensions;
-        private static final Set<String> DEF_HIGH = Set.of(".env", ".properties", ".yml", ".yaml", ".conf", ".ini");
-
-        private Set<String> lowRiskExtensions;
-        private static final Set<String> DEF_LOW = Set.of(".md", ".txt", ".csv", ".log", ".example", ".sample");
-
-        private Set<String> dummyKeywords;
-        private static final Set<String> DEF_DUMMY = Set.of(
-            "dummy", "your_api_key", "insert_here", "placeholder",
-            "place_holder", "replace_me", "changeme", "change_me"
-        );
-
-        private List<String> prodPathMarkers = List.of("src/main/", ".env", "config");
-        private List<String> testPathMarkers = List.of("test", "mock", "spec");
-        private List<String> prodContextMarkers = List.of("prod", "live");
-        private List<String> mockContextMarkers = List.of("example", "dummy", "fake", "mock");
-
-        public Pattern getInterpolationPattern() {
-            if (interpolationPattern == null) {
-                interpolationPattern = Pattern.compile(interpolationPatternRegex);
-            }
-            return interpolationPattern;
-        }
-
-        public Set<String> getHighRiskExts() { return highRiskExtensions != null ? highRiskExtensions : DEF_HIGH; }
-        public Set<String> getLowRiskExts() { return lowRiskExtensions != null ? lowRiskExtensions : DEF_LOW; }
-        public Set<String> getDummyKeywords() { return dummyKeywords != null ? dummyKeywords : DEF_DUMMY; }
-    }
-
-    @Data
-    //@Singleton
-    //@Named
-    public static class PostProcessorConfig {
-        private int highVolumeThreshold = 15;
-    }
-
-    @Data
-    //@Singleton
-    //@Named
-    public static class PatternConfig {
-        private List<SecretPattern> overrides;
-        public List<SecretPattern> getEffective() {
-            return overrides != null ? overrides : Registry.DEFAULT_PATTERNS;
         }
     }
 
@@ -440,9 +333,9 @@ public class FacepalmScanner {
         public void evaluate(Finding finding, FileContext context) {
             String fileName = context.getPath().getFileName().toString().toLowerCase();
 
-            if (config.getEvaluators().getHighRiskExts().stream().anyMatch(fileName::endsWith)) {
+            if (config.getEvaluators().getHighRiskExtensions().stream().anyMatch(fileName::endsWith)) {
                 finding.log("High Risk Configuration File", 15, 20);
-            } else if (config.getEvaluators().getLowRiskExts().stream().anyMatch(fileName::endsWith)) {
+            } else if (config.getEvaluators().getLowRiskExtensions().stream().anyMatch(fileName::endsWith)) {
                 finding.log("Documentation/Log File", -30, -40);
             }
         }
@@ -661,15 +554,6 @@ public class FacepalmScanner {
     }
 
     @Value
-    public static class SecretPattern {
-        String name;
-        Pattern pattern;
-        int baseRisk;
-        int baseConfidence;
-        boolean isMultiLine;
-    }
-
-    @Value
     public static class FileContext {
         Path path;
         String fullContent;
@@ -715,46 +599,6 @@ public class FacepalmScanner {
         public String getMaskedSecret() {
             return secretValue.length() <= 8 ? "****" : secretValue.substring(0, 4) + "..." + secretValue.substring(secretValue.length() - 4);
         }
-    }
-
-    public static class Registry {
-        public static final List<SecretPattern> DEFAULT_PATTERNS = List.of(
-            new SecretPattern("AWS Access Key", Pattern.compile("\\bAKIA[0-9A-Z]{16}\\b"), 70, 95, false),
-            new SecretPattern("AWS Secret Key", Pattern.compile("(?i)aws_(?:secret|access|key).{0,10}[=:]\\s*([^\\s]{40})"), 85, 80, false),
-            new SecretPattern("Google API Key", Pattern.compile("\\bAIza[0-9A-Za-z\\-_]{35}\\b"), 60, 90, false),
-            new SecretPattern("Firebase Key", Pattern.compile("AAAA[A-Za-z0-9_\\-]{7}:[A-Za-z0-9_\\-]{140,}"), 75, 95, false),
-            new SecretPattern("Heroku API Key", Pattern.compile("(?i)heroku.*[=:]\\s*([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})"), 70, 85, false),
-            new SecretPattern("Azure OpenAI Key", Pattern.compile("(?i)(?:azure|openai).*?key.{0,10}[=:]\\s*([a-zA-Z0-9]{32})"), 80, 85, false),
-            new SecretPattern("MongoDB Connection", Pattern.compile("(?i)mongodb(?:\\+srv)?://([^/\\s]+:[^/\\s]+)@"), 90, 95, false),
-            new SecretPattern("PostgreSQL Connection", Pattern.compile("(?i)postgres(?:ql)?://([^/\\s]+:[^/\\s]+)@"), 90, 95, false),
-            new SecretPattern("MySQL Connection", Pattern.compile("(?i)mysql://([^/\\s]+:[^/\\s]+)@"), 90, 95, false),
-            new SecretPattern("Redis Password", Pattern.compile("(?i)redis://[^/\\s]*:([^/\\s]+)@"), 80, 90, false),
-            new SecretPattern("SQL Server Password", Pattern.compile("(?i)(?:sql[_-]?server|mssql).*password\\s*[=:]\\s*([^\\s;]{8,})"), 80, 85, false),
-            new SecretPattern("OpenAI Project Key", Pattern.compile("sk-proj-[A-Za-z0-9]{48,}"), 90, 100, false),
-            new SecretPattern("OpenAI API Key", Pattern.compile("\\bsk-[A-Za-z0-9]{48}\\b"), 80, 90, false),
-            new SecretPattern("Anthropic API Key", Pattern.compile("sk-ant-api03-[A-Za-z0-9_\\-]{93,95}"), 85, 100, false),
-            new SecretPattern("Google Gemini API Key", Pattern.compile("\\bAIza[0-9A-Za-z\\-_]{35}\\b"), 60, 85, false),
-            new SecretPattern("HuggingFace Token", Pattern.compile("hf_[A-Za-z0-9]{34}"), 75, 95, false),
-            new SecretPattern("Replicate API Token", Pattern.compile("r8_[A-Za-z0-9]{30,40}"), 75, 95, false),
-            new SecretPattern("Cohere API Key", Pattern.compile("\\b[cC]ohere[_-]?api[_-]?key.{0,10}[=:]\\s*([A-Za-z0-9]{40})"), 75, 90, false),
-            new SecretPattern("Mistral API Key", Pattern.compile("\\b[mM]istral[_-]?api[_-]?key.{0,10}[=:]\\s*([A-Za-z0-9]{32})"), 75, 90, false),
-            new SecretPattern("Groq API Key", Pattern.compile("gsk_[A-Za-z0-9]{52}"), 80, 95, false),
-            new SecretPattern("Stripe Live Secret", Pattern.compile("sk_live_[0-9a-zA-Z]{24,}"), 85, 95, false),
-            new SecretPattern("Stripe Test Secret", Pattern.compile("sk_test_[0-9a-zA-Z]{24,}"), 30, 95, false),
-            new SecretPattern("GitHub Fine-Grained Token", Pattern.compile("github_pat_[0-9A-Za-z_]{82,}"), 85, 100, false),
-            new SecretPattern("GitHub Token", Pattern.compile("ghp_[0-9A-Za-z]{36}"), 80, 100, false),
-            new SecretPattern("Slack Token", Pattern.compile("xox[baprs]-[0-9a-zA-Z-]{10,48}"), 75, 95, false),
-            new SecretPattern("Twilio API Key", Pattern.compile("SK[0-9a-fA-F]{32}"), 70, 90, false),
-            new SecretPattern("Mailgun API Key", Pattern.compile("key-[0-9a-zA-Z]{32}"), 70, 90, false),
-            new SecretPattern("GitLab Token", Pattern.compile("glpat-[0-9a-zA-Z\\-_]{20}"), 85, 100, false),
-            new SecretPattern("Slack Webhook", Pattern.compile("https://hooks\\.slack\\.com/services/T[A-Z0-9]{8}/B[A-Z0-9]{8}/[A-Za-z0-9]{24}"), 80, 100, false),
-            new SecretPattern("Discord Webhook", Pattern.compile("https://discord\\.com/api/webhooks/[0-9]{18,19}/[A-Za-z0-9\\-_]{68}"), 70, 100, false),
-            new SecretPattern("Private Key Block", Pattern.compile("(?s)-----BEGIN (?:RSA|EC|OPENSSH|PGP)? PRIVATE KEY-----.*?-----END (?:RSA|EC|OPENSSH|PGP)? PRIVATE KEY-----"), 100, 100, true),
-            new SecretPattern("Basic Auth Header", Pattern.compile("(?i)Authorization:\\s*Basic\\s+(?!\\{\\{|\\$\\{)([A-Za-z0-9+/=]{20,})"), 60, 75, false),
-            new SecretPattern("JWT Token", Pattern.compile("eyJ[A-Za-z0-9_\\-]{10,}\\.[A-Za-z0-9._\\-]{10,}\\.[A-Za-z0-9._\\-]{10,}"), 30, 40, false),
-            new SecretPattern("Generic API Key Assignment", Pattern.compile("(?i)(?:api[_-]?key|secret|token|client[_-]?secret)\\s*[=:]\\s*['\"]?(?!\\{\\{|\\$\\{)([^'\"\\s}]{16,})['\"]?"), 65, 70, false),
-            new SecretPattern("Generic Password Assignment", Pattern.compile("(?i)(?:password|passwd|pwd)\\s*[=:]\\s*['\"]?(?!\\{\\{|\\$\\{)([^'\"\\s}]{8,})['\"]?"), 50, 40, false)
-        );
     }
 
     @Named

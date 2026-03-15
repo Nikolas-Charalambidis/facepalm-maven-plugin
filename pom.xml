@@ -10,81 +10,114 @@
     <packaging>maven-plugin</packaging>
 
     <properties>
-        <maven.version>3.9.12</maven.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <org.apache.maven.version>3.9.12</org.apache.maven.version>
+        <org.apache.maven.plugin-tools.version>3.11.0</org.apache.maven.plugin-tools.version>
+        <org.apache.maven.failsafe-plugin.version>3.2.5</org.apache.maven.failsafe-plugin.version>
+        <org.apache.maven.resources-plugin.version>3.3.1</org.apache.maven.resources-plugin.version>
+        <org.projectlombok.version>1.18.30</org.projectlombok.version>
+        <org.freemarker.version>2.3.32</org.freemarker.version>
+        <tools.jackson.version>3.1.0</tools.jackson.version>
+        <com.google.inject.guice.version>5.1.0</com.google.inject.guice.version>
+        <org.eclipse.sisu.version>0.9.0.M2</org.eclipse.sisu.version>
+        <com.soebes.itf.version>0.13.0</com.soebes.itf.version>
     </properties>
 
     <dependencies>
+        <!-- Provides core Maven interfaces and logging classes. -->
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-plugin-api</artifactId>
-            <version>${maven.version}</version>
+            <version>${org.apache.maven.version}</version>
+            <!-- Included in Maven runtime. -->
+            <!-- TODO WHY NOT PROVIDED, CLI? -->
             <scope>compile</scope>
         </dependency>
+
+        <!-- Provides @Mojo and @Parameter annotations for goals and provides metadata to generate the plugin.xml descriptor. -->
         <dependency>
             <groupId>org.apache.maven.plugin-tools</groupId>
             <artifactId>maven-plugin-annotations</artifactId>
-            <version>3.11.0</version>
+            <version>${org.apache.maven.plugin-tools.version}</version>
+            <!-- Bundling it causes runtime classpath conflicts. -->
             <scope>provided</scope>
         </dependency>
+
+        <!-- Reduces boilerplate. -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
+            <version>${org.projectlombok.version}</version>
+            <!-- Annotation processor. -->
             <scope>provided</scope>
-            <version>1.18.30</version>
         </dependency>
+
+        <!-- Template engine for generating HTML/Markdown reports. -->
         <dependency>
             <groupId>org.freemarker</groupId>
             <artifactId>freemarker</artifactId>
-            <version>2.3.32</version>
-            <scope>compile</scope>
+            <version>${org.freemarker.version}</version>
         </dependency>
+
+        <!-- Handles JSON output formats and data mapping. -->
         <dependency>
             <groupId>tools.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>3.1.0</version>
-        <scope>compile</scope>
+            <version>${tools.jackson.version}</version>
         </dependency>
+
+        <!-- Standard JSR-330 annotations for dependency injection. -->
         <dependency>
             <groupId>javax.inject</groupId>
             <artifactId>javax.inject</artifactId>
             <version>1</version>
-            <scope>compile</scope>
         </dependency>
+
+        <!-- Connects internal logic to Maven's Sisu container. -->
         <dependency>
             <groupId>org.eclipse.sisu</groupId>
             <artifactId>org.eclipse.sisu.inject</artifactId>
-            <version>0.9.0.M4</version>
+            <version>${org.eclipse.sisu.version}</version>
+            <!-- TODO WHY COMPILE, CLI? -->
             <scope>compile</scope>
         </dependency>
+
+        <!-- The primary DI framework for managing engine lifecycle. -->
         <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
-            <version>5.1.0</version>
-            <scope>compile</scope>
+            <version>${com.google.inject.guice.version}</version>
         </dependency>
+
+        <!-- Runs full Maven integration tests inside JUnit 5. -->
         <dependency>
             <groupId>com.soebes.itf.jupiter.extension</groupId>
             <artifactId>itf-jupiter-extension</artifactId>
-            <version>0.13.0</version>
+            <version>${com.soebes.itf.version}</version>
+            <!-- Integration testing only. -->
             <scope>test</scope>
         </dependency>
+
+        <!-- Assertions specifically for Maven build results. -->
         <dependency>
             <groupId>com.soebes.itf.jupiter.extension</groupId>
             <artifactId>itf-assertj</artifactId>
-            <version>0.13.0</version>
+            <version>${com.soebes.itf.version}</version>
+            <!-- Integration testing only. -->
             <scope>test</scope>
         </dependency>
     </dependencies>
 
     <build>
         <plugins>
+            <!--- Indexes @Named components: Allows Sisu to discover your scanner components without slow reflection at runtime. -->
             <plugin>
                 <groupId>org.eclipse.sisu</groupId>
                 <artifactId>sisu-maven-plugin</artifactId>
-                <version>0.9.0.M4</version>
+                <version>${org.eclipse.sisu.version}</version>
                 <executions>
                     <execution>
                         <id>generate-index</id>
@@ -94,17 +127,22 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <!-- Descriptor Generation: Automatically generates the plugin.xml file required for Maven to recognize your goals. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-plugin-plugin</artifactId>
-                <version>3.11.0</version>
+                <version>${org.apache.maven.plugin-tools.version}</version>
             </plugin>
+
+            <!-- Test Preparation: Installs the plugin into a temporary local repository so integration tests run against the latest build. -->
             <plugin>
                 <groupId>com.soebes.itf.jupiter.extension</groupId>
                 <artifactId>itf-maven-plugin</artifactId>
-                <version>0.13.0</version>
+                <version>${com.soebes.itf.version}</version>
                 <executions>
                     <execution>
+                        <id>install-plugin</id>
                         <goals>
                             <goal>install</goal>
                         </goals>
@@ -112,13 +150,15 @@
                 </executions>
             </plugin>
 
+            <!-- Integration Testing. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
+                <version>${org.apache.maven.failsafe-plugin.version}</version>
                 <configuration>
                     <systemPropertyVariables>
+                        <!-- Passes maven.home to ensure the test runner uses the correct Maven binary. -->
                         <maven.home>${maven.home}</maven.home>
-                        <localRepositoryPath>${project.build.directory}/local-repo</localRepositoryPath>
                     </systemPropertyVariables>
                 </configuration>
                 <executions>
@@ -131,17 +171,19 @@
                 </executions>
             </plugin>
 
+            <!-- Property Filtering: Allows the use of ${} or @ delimiters to inject POM properties into report templates and test files. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
-                <version>3.3.1</version>
+                <version>${org.apache.maven.resources-plugin.version}</version>
                 <configuration>
                     <useDefaultDelimiters>true</useDefaultDelimiters>
                 </configuration>
             </plugin>
         </plugins>
 
-
+        <!-- Contains "dummy" projects for Integration Tests. -->
+        <!-- Filtering allows us to inject the current ${project.version} into their test POMs automatically. -->
         <testResources>
             <testResource>
                 <directory>src/test/resources-its</directory>
@@ -149,5 +191,4 @@
             </testResource>
         </testResources>
     </build>
-
 </project>

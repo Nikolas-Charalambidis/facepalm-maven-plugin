@@ -21,17 +21,24 @@
             <plugin>
                 <groupId>dev.nichar</groupId>
                 <artifactId>facepalm-maven-plugin</artifactId>
-                <version>${project.version}</version>
+                <version>@project.version@</version>
                 <executions>
                     <execution>
-                        <goals><goal>scan</goal></goals>
+                        <id>manual-scan</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>scan</goal>
+                        </goals>
                     </execution>
                 </executions>
                 <configuration>
-                    <failOnError>true</failOnError>
+                    <showSkipped>true</showSkipped>
+                    <showProcessed>true</showProcessed>
+                    <showDetails>true</showDetails>
+                    <showScoring>true</showScoring>
+                    <failOnWarnings>true</failOnWarnings>
                 </configuration>
             </plugin>
         </plugins>
     </build>
-
 </project>

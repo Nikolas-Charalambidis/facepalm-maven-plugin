@@ -31,17 +31,7 @@
                         </goals>
                     </execution>
                 </executions>
-                <configuration>
-                    <engine>
-                        <showProcessed>true</showProcessed>
-                        <showSkipped>true</showSkipped>
-                    </engine>
-                    <scoring>
-                        <showDetails>true</showDetails>
-                    </scoring>
-                </configuration>
             </plugin>
         </plugins>
     </build>
-
 </project>

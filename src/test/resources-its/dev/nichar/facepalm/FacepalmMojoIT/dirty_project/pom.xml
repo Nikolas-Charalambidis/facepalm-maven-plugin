@@ -24,9 +24,19 @@
                 <version>@project.version@</version>
                 <executions>
                     <execution>
-                        <goals><goal>scan</goal></goals>
+                        <id>manual-scan</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>scan</goal>
+                        </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <showSkipped>true</showSkipped>
+                    <showProcessed>true</showProcessed>
+                    <showDetails>true</showDetails>
+                    <showScoring>true</showScoring>
+                </configuration>
             </plugin>
         </plugins>
     </build>

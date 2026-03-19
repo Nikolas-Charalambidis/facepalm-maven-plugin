@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 
 /**
  * Data Transfer Object representing a single secret detection signature.
- * * This class encapsulates the regular expression logic along with the
+ * This class encapsulates the regular expression logic along with the
  * initial scoring weights used by the heuristic engine.
  *
  * @author Nikolas Charalambidis

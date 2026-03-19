@@ -32,7 +32,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -82,8 +81,7 @@ public class FacepalmScanner {
             gitIgnoreService.loadAllGitIgnores(root);
             List<FacepalmScanner.Finding> findings = engine.scan(root);
             FacepalmScanner.ScanStatistics stats = engine.getStats();
-            reporter.printResults(findings);
-            reporter.printStats(stats);
+            reporter.printLogs(stats, findings);
             reporter.performReporting(findings, stats, root.toString(), version, outputDir);
 
             final var scoring = context.getScoring();
@@ -130,28 +128,20 @@ public class FacepalmScanner {
 
             List<Callable<List<Finding>>> tasks = new ArrayList<>();
             try (Stream<Path> paths = Files.walk(root)) {
-                paths.filter(Files::isRegularFile)
-                    .peek(path -> stats.recordDiscovery()) // Moved discovery to BEFORE filter
-                    .filter(path -> shouldScan(path, stats))
-                    .forEach(path -> {
-                        stats.recordScan(path);
-                        // 2. Wrap the task to "pipe" the context
-                        tasks.add(() -> {
-                            try {
-                                // This happens INSIDE the Executor thread
-                                //context.set(currentConfig);
-                                return processFile(path);
-                            } finally {
-                                // CRITICAL: Clean up so the next task on this thread
-                                // doesn't start with stale data
-                                //context.clear();
-                            }
-                        });
-                    });
+                final List<Path> discoveredPaths = paths.filter(Files::isRegularFile).toList();
+                log.info("Discovered " + discoveredPaths.size() + " files...");
+                for (var path : discoveredPaths) {
+                    stats.recordDiscovery();
+                    if (!shouldScan(path, stats)) {
+                        continue;
+                    }
+                    stats.recordScan(path);
+                    tasks.add(() -> processFile(path));
+                }
             }
 
             if (tasks.isEmpty()) {
-                log.info("No files found to scan.");
+                log.info("No files qualified to scan.");
                 return Collections.emptyList();
             }
 
@@ -180,7 +170,7 @@ public class FacepalmScanner {
 
         private boolean shouldScan(Path path, ScanStatistics stats) {
             final var engineConfig = context.getEngine();
-            Set<String> skipDirs = engineConfig.getEffectiveSkipDirs();
+            Set<String> skipDirs = engineConfig.getSkipDirs();
             for (Path element : path) {
                 if (skipDirs.contains(element.toString())) {
                     if (engineConfig.isShowSkipped()) {
@@ -224,7 +214,9 @@ public class FacepalmScanner {
                 String content = Files.readString(path);
                 FileContext context = new FileContext(path, content, Arrays.asList(content.split("\\R")));
                 List<Finding> fileFindings = new ArrayList<>();
-                for (SecretExtractor ex : extractors) fileFindings.addAll(ex.extract(context));
+                for (SecretExtractor ex : extractors) {
+                    fileFindings.addAll(ex.extract(context));
+                }
                 for (Finding f : fileFindings) {
                     for (FindingEvaluator ev : evaluators) ev.evaluate(f, context);
                 }
@@ -263,7 +255,7 @@ public class FacepalmScanner {
         public List<Finding> extract(FileContext context) {
             List<Finding> findings = new ArrayList<>();
             Set<String> localDedup = new HashSet<>();
-            List<SecretPattern> activePatterns = config.getPatterns().getEffective();
+            List<SecretPattern> activePatterns = config.getPatterns().getOverrides();
 
             for (int i = 0; i < context.getLines().size(); i++) {
                 String rawLine = context.getLines().get(i);
@@ -605,7 +597,11 @@ public class FacepalmScanner {
     @Singleton
     public static class Reporter {
 
-        @Inject private dev.nichar.facepalm.FacepalmConfig context;
+        // Maven uses a standard 72-character line for separators.
+        private static final String SEPARATOR = "-".repeat(72);
+
+        @Inject
+        private dev.nichar.facepalm.FacepalmConfig context;
 
         private final Log log;
         private final Configuration cfg;
@@ -637,7 +633,9 @@ public class FacepalmScanner {
             try (Writer out = new OutputStreamWriter(new FileOutputStream(outputFile), StandardCharsets.UTF_8)) {
                 temp.process(report, out);
             }
-            log.info("📊  HTML Report generated at: " + outputPath.toAbsolutePath());
+            if (context.getScoring().isShowDetails()) {
+                log.info("📊  HTML Report generated at: " + outputPath.toAbsolutePath());
+            }
         }
 
         public void generateSarif(ScanReport report, File outputFile) throws Exception {
@@ -672,7 +670,9 @@ public class FacepalmScanner {
                 }
             }
             mapper.writerWithDefaultPrettyPrinter().writeValue(outputFile, sarif);
-            log.info("📊 Sarif Report generated at: " + outputFile.toPath().toAbsolutePath());
+            if (context.getScoring().isShowDetails()) {
+                log.info("📊 Sarif Report generated at: " + outputFile.toPath().toAbsolutePath());
+            }
         }
 
         public ScanReport buildReport(List<Finding> findings, ScanStatistics stats, String rootPath, String version) {
@@ -732,19 +732,11 @@ public class FacepalmScanner {
                 .build();
         }
 
-        public void printResults(List<Finding> findings) {
-            // 1. Maven uses a standard 72-character line for separators
-            final String SEPARATOR = "------------------------------------------------------------------------";
-
-            log.info(SEPARATOR);
-
-            if (findings.isEmpty()) {
-                log.info("No secrets or sensitive patterns detected. Your secrets are safe.");
-                log.info(SEPARATOR);
-            }
-
+        public void printLogs(ScanStatistics stats, List<Finding> findings) {
             final var scoringConfig = context.getScoring();
-            if (scoringConfig.isShowDetails()) {
+
+            if (scoringConfig.isShowScoring()) {
+                log.info(SEPARATOR);
                 findings.stream()
                     .filter(f -> f.getSeverity(scoringConfig) != Severity.INFO)
                     .sorted(Comparator.comparing(Finding::getNumericScore).reversed())
@@ -767,54 +759,67 @@ public class FacepalmScanner {
                         // Indented info details following the header
                         log.info("  Location: " + f.getContext().getPath() + ":" + f.getLineNumber());
 
-                        String snippet = f.getContextSnippet().trim();
-                        log.info("  Context : " + (snippet.length() > 80
-                            ? snippet.substring(0, 77) + "..."
-                            : snippet));
-
-                        if (log.isDebugEnabled()) {
-                            log.debug("  Secret  : " + f.getMaskedSecret());
-                            log.debug("  Audit   : " + f.getRiskScore() + "/" + f.getConfidenceScore());
-                        }
+                        //String snippet = f.getContextSnippet().trim();
+                        //log.info("  Context : " + (snippet.length() > 80
+                        //    ? snippet.substring(0, 77) + "..."
+                        //    : snippet));
 
                         // Empty line between findings for readability, similar to test run logs
                         log.info("");
                     });
             }
 
-            // 4. Summary section mimicking the BUILD SUCCESS/FAILURE block
+            long info = findings.stream().filter(f -> f.getSeverity(scoringConfig) == Severity.INFO).count();
             long errors = findings.stream().filter(f -> f.getSeverity(scoringConfig) == Severity.ERROR).count();
             long warnings = findings.stream().filter(f -> f.getSeverity(scoringConfig) == Severity.WARNING).count();
 
+            if (scoringConfig.isShowDetails()) {
+                log.info(SEPARATOR);
+
+                log.info("Files discovered: " + stats.getFilesDiscovered().sum());
+                log.info("Files excluded:   " + stats.getExclusionBreakdown().values().stream().mapToLong(LongAdder::sum).sum());
+                if (log.isDebugEnabled()) {
+                    stats.getExclusionBreakdown().forEach(
+                        (key, value) -> log.debug(String.format("  %s: %d", key.getDescription(), value.sum())));
+                }
+                log.info("Files scanned:    " + stats.getFilesScanned().sum());
+
+                log.info(SEPARATOR);
+
+                log.info("Total findings:   " + findings.size());
+                log.info("Critical:         " + errors);
+                log.info("Warnings:         " + warnings);
+            }
+
+            log.info(SEPARATOR);
+
+            // Summary message based on severity
+            String statusMessage;
+            if (errors > 0) {
+                statusMessage = "High-risk issues detected! Action required.";
+            } else if (warnings > 0) {
+                statusMessage = "Warnings detected. Review recommended.";
+            } else if (info > 0) {
+                statusMessage = "Informational findings detected.";
+            } else {
+                statusMessage = "No secrets or sensitive patterns detected. Your secrets are safe.";
+            }
+
+            // Determine scan result text
+            final String scanResult;
+            if (errors > 0) {
+                scanResult = "FAILURE";
+            } else if (warnings > 0) {
+                scanResult = "WARNINGS";
+            } else {
+                scanResult = "SUCCESS";
+            }
+
             // Determine status text based on findings
-            log.info(errors > 0 ? "SCAN FAILURE" : "SCAN SUCCESS");
-            log.info(SEPARATOR);
-            log.info(String.format("Total findings:  %d", findings.size()));
-            log.info(String.format("Critical:        %d", errors));
-            log.info(String.format("Warnings:        %d", warnings));
-            log.info(SEPARATOR);
-        }
 
-        public void printStats(ScanStatistics stats) {
-            final String SEPARATOR = "------------------------------------------------------------------------";
-
-            // Maven usually logs timing and stats within the standard line format
-            log.info("Total time:       " + formatDuration(stats.getDuration()));
-            log.info("Finished at:      " + java.time.ZonedDateTime.now().format(java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME));
-            log.info("Files discovered: " + stats.getFilesDiscovered().sum());
-            log.info("Files excluded:   " + stats.getExclusionBreakdown().values().stream().mapToLong(LongAdder::sum).sum());
-            if (log.isDebugEnabled()) {
-                stats.getExclusionBreakdown().forEach(
-                    (key, value) -> log.debug(String.format("  %-12s: %d", key.getDescription(), value.sum())));
-            }
-            log.info("Files scanned:    " + stats.getFilesScanned().sum());
-            if (log.isDebugEnabled()) {
-                stats.getSuffixCounts().entrySet().stream()
-                    .sorted((e1, e2) -> Long.compare(e2.getValue().sum(), e1.getValue().sum()))
-                    .limit(6)
-                    .forEach(entry -> log.debug(String.format("  %-12s: %d", entry.getKey(), entry.getValue().sum())));
-            }
+            log.info("SCAN RESULT : " + scanResult);
             log.info(SEPARATOR);
+            log.info(statusMessage);
         }
 
         // Helper for Maven-style duration (e.g., 1.234 s)

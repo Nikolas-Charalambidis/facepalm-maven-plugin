@@ -1,7 +1,7 @@
 package dev.nichar.facepalm.config;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 
@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
  * @author Nikolas Charalambidis
  * @since 1.0.0
  */
-@Getter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class PostProcessorConfig {

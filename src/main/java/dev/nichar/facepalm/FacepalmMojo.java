@@ -14,6 +14,7 @@ import org.eclipse.sisu.space.URLClassSpace;
 import org.eclipse.sisu.wire.WireModule;
 
 import java.io.File;
+import java.util.Set;
 
 import com.google.inject.Guice;
 import dev.nichar.facepalm.config.EngineConfig;
@@ -54,16 +55,83 @@ public class FacepalmMojo extends AbstractMojo {
     private File outputDirectory;
 
     /**
-     * Configuration for the scanning engine execution and file filtering.
+     * The number of concurrent threads used for scanning.
+     * Defaults to the number of available processors on the host system.
      */
-    @Parameter
-    private EngineConfig engine = new EngineConfig();
+    @Parameter(property = "threads")
+    private Integer threads;
 
     /**
-     * Configuration for how findings are scored and when the build should be interrupted.
+     * The maximum allowed size of a file (in bytes) to be scanned.
+     * Default is 5MB.
      */
-    @Parameter
-    private ScoringConfig scoring = new ScoringConfig();
+    @Parameter(property = "maxFileSizeBytes", defaultValue = "5242880")
+    private long maxFileSizeBytes;
+
+    /**
+     * Regex to identify binary files.
+     */
+    @Parameter(
+        property = "skipBinaryRegex",
+        defaultValue = ".*\\.(png|jpg|jpeg|gif|pdf|zip|jar|class|tar|gz|exe|dll)$"
+    )
+    private String skipBinaryRegex;
+
+    /**
+     * Directories to skip.
+     */
+    @Parameter(property = "skipDirs")
+    private Set<String> skipDirs;
+
+    /**
+     * Log processed files.
+     */
+    @Parameter(property = "showProcessed", defaultValue = "false")
+    private boolean showProcessed;
+
+    /**
+     * Log skipped files.
+     */
+    @Parameter(property = "showSkipped", defaultValue = "false")
+    private boolean showSkipped;
+
+    /**
+     * The score threshold (0-100) at or above which a finding is classified as a high-risk error.
+     */
+    @Parameter(property = "errorThreshold", defaultValue = "80")
+    private int errorThreshold;
+
+    /**
+     * The score threshold (0-100) at or above which a finding is classified as a moderate-risk warning.
+     */
+    @Parameter(property = "warningThreshold", defaultValue = "40")
+    private int warningThreshold;
+
+    /**
+     * When true, logs detailed scoring breakdown.
+     */
+    @Parameter(property = "showScoring", defaultValue = "false")
+    private boolean showScoring;
+
+    /**
+     * When true, logs a detailed breakdown of files discovered, excluded,
+     * and scanned, including per-extension counts and binary file detection.
+     * Useful for debugging or auditing scan coverage. Defaults to false.
+     */
+    @Parameter(property = "showDetails", defaultValue = "false")
+    private boolean showDetails;
+
+    /**
+     * Fail build if errorThreshold is reached.
+     */
+    @Parameter(property = "failOnError", defaultValue = "true")
+    private boolean failOnError;
+
+    /**
+     * Fail build if warningThreshold is reached.
+     */
+    @Parameter(property = "failOnWarnings", defaultValue = "false")
+    private boolean failOnWarnings;
 
     /**
      * Heuristic configuration used to evaluate the risk and legitimacy of discovered secrets.
@@ -83,10 +151,13 @@ public class FacepalmMojo extends AbstractMojo {
     @Parameter
     private PostProcessorConfig postProcessing = new PostProcessorConfig();
 
+
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
 
         // Assembles the validated configuration suite from Maven parameters into an immutable DTO for the engine.
+        final var engine = new EngineConfig(threads, maxFileSizeBytes, skipBinaryRegex, skipDirs, showProcessed, showSkipped);
+        final var scoring = new ScoringConfig(errorThreshold, warningThreshold, showScoring, showDetails, failOnError, failOnWarnings);
         final var effectiveConfig = new FacepalmConfig(engine, scoring, evaluators, postProcessing, patterns);
 
         // Creates a Sisu ClassSpace to index classes and resources from the current ClassLoader.
@@ -116,8 +187,12 @@ public class FacepalmMojo extends AbstractMojo {
         final var config = injector.getInstance(FacepalmConfig.class);
         final var log = injector.getInstance(Log.class);
 
-        log.info("Version: " + pluginDescriptor.getVersion());
-        log.info("Configuration: " + config);
+        if (runner == null || config == null || log == null) {
+            throw new MojoExecutionException("Facepalm Mojo initialization failed: " +
+                "runner=" + runner + ", config=" + config + ", log=" + log);
+        }
+
+        log.info("Starting facepalm-maven-plugin " + pluginDescriptor.getVersion());
 
         final var root = baseDir.toPath().toAbsolutePath().normalize();
 

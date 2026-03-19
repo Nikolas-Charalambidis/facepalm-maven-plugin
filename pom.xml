@@ -32,8 +32,7 @@
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-plugin-api</artifactId>
             <version>${org.apache.maven.version}</version>
-            <!-- Included in Maven runtime. -->
-            <!-- TODO WHY NOT PROVIDED, CLI? -->
+            <!-- Compile scope needed because plugin is also run via PSVM/CLI outside Maven runtime -->
             <scope>compile</scope>
         </dependency>
 
@@ -81,7 +80,7 @@
             <groupId>org.eclipse.sisu</groupId>
             <artifactId>org.eclipse.sisu.inject</artifactId>
             <version>${org.eclipse.sisu.version}</version>
-            <!-- TODO WHY COMPILE, CLI? -->
+            <!-- Compile scope required so dependency is available at runtime when running CLI/PSVM from IDE. -->
             <scope>compile</scope>
         </dependency>
 

@@ -5,11 +5,8 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 
 
 /**
@@ -18,7 +15,7 @@ import lombok.RequiredArgsConstructor;
  * @author Nikolas Charalambidis
  * @since 1.0.0
  */
-@Getter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class EvaluatorConfig {

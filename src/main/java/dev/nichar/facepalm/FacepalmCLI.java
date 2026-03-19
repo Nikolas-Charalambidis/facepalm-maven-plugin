@@ -78,7 +78,10 @@ public class FacepalmCLI {
         final var config = injector.getInstance(FacepalmConfig.class);
         final var log = injector.getInstance(Log.class);
 
-        log.info("Configuration: " + config);
+        if (runner == null || config == null || log == null) {
+            throw new MojoExecutionException("Facepalm Mojo initialization failed: " +
+                "runner=" + runner + ", config=" + config + ", log=" + log);
+        }
 
         final var root = Paths.get(args.length > 0 ? args[0] : ".").toAbsolutePath().normalize();
 

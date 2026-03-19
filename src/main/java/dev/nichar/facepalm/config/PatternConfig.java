@@ -2,11 +2,10 @@ package dev.nichar.facepalm.config;
 
 import java.util.List;
 
-import dev.nichar.facepalm.FacepalmScanner;
 import dev.nichar.facepalm.pattern.SecretPattern;
 import dev.nichar.facepalm.pattern.SecretPatternRegistry;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 
@@ -16,7 +15,7 @@ import lombok.NoArgsConstructor;
  * @author Nikolas Charalambidis
  * @since 1.0.0
  */
-@Getter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class PatternConfig {
@@ -34,7 +33,7 @@ public class PatternConfig {
      *
      * @return A non-null list of {@link SecretPattern} instances.
      */
-    public List<SecretPattern> getEffective() {
+    public List<SecretPattern> getOverrides() {
         return overrides != null ? overrides : SecretPatternRegistry.DEFAULT_PATTERNS;
     }
 }

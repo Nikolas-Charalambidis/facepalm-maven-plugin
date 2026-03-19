@@ -1,7 +1,7 @@
 package dev.nichar.facepalm.config;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 
@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
  * @author Nikolas Charalambidis
  * @since 1.0.0
  */
-@Getter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class ScoringConfig {
@@ -30,6 +30,13 @@ public class ScoringConfig {
     /**
      * When true, logs the breakdown of how the heuristic score was calculated
      * for each finding to help debug false positives.
+     */
+    private boolean showScoring = false;
+
+    /**
+     * When true, logs a detailed breakdown of files discovered, excluded,
+     * and scanned, including per-extension counts and binary file detection.
+     * Useful for debugging or auditing scan coverage. Defaults to false.
      */
     private boolean showDetails = false;
 

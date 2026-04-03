@@ -3,13 +3,13 @@ package dev.nichar.facepalm.pattern;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import dev.nichar.facepalm.FacepalmScanner;
+import dev.nichar.facepalm.engine.evaluator.FindingEvaluator;
 import lombok.experimental.UtilityClass;
 
 /**
  * Central repository for built-in secret detection patterns.
  * This registry contains the "Gold Standard" patterns for Facepalm's heuristic engine.
- * Each pattern includes base scoring and confidence levels that are further refined by the {@link FacepalmScanner.FindingEvaluator} during a scan.
+ * Each pattern includes base scoring and confidence levels that are further refined by the {@link FindingEvaluator} during a scan.
  *
  * @author Nikolas Charalambidis
  * @since 1.0.0

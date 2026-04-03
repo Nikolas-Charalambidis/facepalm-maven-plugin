@@ -22,6 +22,7 @@ import dev.nichar.facepalm.config.EvaluatorConfig;
 import dev.nichar.facepalm.config.PatternConfig;
 import dev.nichar.facepalm.config.PostProcessorConfig;
 import dev.nichar.facepalm.config.ScoringConfig;
+import dev.nichar.facepalm.engine.FacepalmRunner;
 import dev.nichar.facepalm.module.FacepalmConfigModule;
 import dev.nichar.facepalm.module.FacepalmLogModule;
 
@@ -43,7 +44,7 @@ public class FacepalmMojo extends AbstractMojo {
     private PluginDescriptor pluginDescriptor;
 
     /**
-     * The project base directory used as the root for scanning operations.
+     * The project base directory.
      */
     @Parameter(defaultValue = "${project.basedir}", readonly = true)
     private File baseDir;
@@ -53,6 +54,12 @@ public class FacepalmMojo extends AbstractMojo {
      */
     @Parameter(defaultValue = "${project.build.directory}", readonly = true)
     private File outputDirectory;
+
+    /**
+     * The root directory for scanning operations.
+     */
+    @Parameter(property = "root")
+    private File root;
 
     /**
      * The number of concurrent threads used for scanning.
@@ -183,7 +190,7 @@ public class FacepalmMojo extends AbstractMojo {
         // Maven (Plexus/Sisu) instantiates the Mojo before your custom Guice injector exists, preventing @Inject from recognizing your local modules.
         // Manually bootstrapping the injector with @Parameter fields is necessary to bridge the gap between Maven's lifecycle and your engine's dependencies.
 
-        final var runner = injector.getInstance(FacepalmScanner.FacepalmRunner.class);
+        final var runner = injector.getInstance(FacepalmRunner.class);
         final var config = injector.getInstance(FacepalmConfig.class);
         final var log = injector.getInstance(Log.class);
 
@@ -194,10 +201,11 @@ public class FacepalmMojo extends AbstractMojo {
 
         log.info("Starting facepalm-maven-plugin " + pluginDescriptor.getVersion());
 
-        final var root = baseDir.toPath().toAbsolutePath().normalize();
+        final var rootFile = this.root != null ? this.root : baseDir;
+        final var rootPath = rootFile.toPath().toAbsolutePath().normalize();
 
         try {
-            runner.run(root, outputDirectory.toPath(), pluginDescriptor.getVersion());
+            runner.run(rootPath, outputDirectory.toPath(), pluginDescriptor.getVersion());
         } catch (MojoFailureException e) {
             throw e;
         } catch (Exception e) {

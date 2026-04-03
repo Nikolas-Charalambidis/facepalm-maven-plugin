@@ -20,10 +20,10 @@
         <org.apache.maven.resources-plugin.version>3.3.1</org.apache.maven.resources-plugin.version>
         <org.projectlombok.version>1.18.30</org.projectlombok.version>
         <org.freemarker.version>2.3.32</org.freemarker.version>
-        <tools.jackson.version>3.1.0</tools.jackson.version>
+        <com.fasterxml.jackson.version>2.21.2</com.fasterxml.jackson.version>
         <com.google.inject.guice.version>5.1.0</com.google.inject.guice.version>
         <org.eclipse.sisu.version>0.9.0.M2</org.eclipse.sisu.version>
-        <com.soebes.itf.version>0.13.0</com.soebes.itf.version>
+        <com.soebes.itf.version>0.13.1</com.soebes.itf.version>
     </properties>
 
     <dependencies>
@@ -63,9 +63,9 @@
 
         <!-- Handles JSON output formats and data mapping. -->
         <dependency>
-            <groupId>tools.jackson.core</groupId>
+            <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>${tools.jackson.version}</version>
+            <version>${com.fasterxml.jackson.version}</version>
         </dependency>
 
         <!-- Standard JSR-330 annotations for dependency injection. -->
@@ -98,6 +98,14 @@
             <version>${com.soebes.itf.version}</version>
             <!-- Integration testing only. -->
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <!-- Conflict version. -->
+                    <artifactId>maven-model</artifactId>
+                    <groupId>org.apache.maven</groupId>
+                </exclusion>
+            </exclusions>
+
         </dependency>
 
         <!-- Assertions specifically for Maven build results. -->

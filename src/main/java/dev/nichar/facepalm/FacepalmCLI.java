@@ -6,6 +6,7 @@ import dev.nichar.facepalm.config.EvaluatorConfig;
 import dev.nichar.facepalm.config.PatternConfig;
 import dev.nichar.facepalm.config.PostProcessorConfig;
 import dev.nichar.facepalm.config.ScoringConfig;
+import dev.nichar.facepalm.engine.FacepalmRunner;
 import dev.nichar.facepalm.module.FacepalmConfigModule;
 import dev.nichar.facepalm.module.FacepalmLogModule;
 
@@ -39,7 +40,7 @@ public class FacepalmCLI {
      * @throws MojoFailureException If the scan identifies critical security findings.
      * @throws MojoExecutionException If an unexpected error occurs during execution.
      */
-    public static void main(String[] args) throws MojoFailureException, MojoExecutionException {
+    public static void main(final String[] args) throws MojoFailureException, MojoExecutionException {
 
         // Initializes the default configuration suite for the scanner engine and evaluators.
         final var effectiveConfig = new FacepalmConfig(
@@ -74,7 +75,7 @@ public class FacepalmCLI {
         // Maven (Plexus/Sisu) instantiates the Mojo before your custom Guice injector exists, preventing @Inject from recognizing your local modules.
         // Manually bootstrapping the injector with @Parameter fields is necessary to bridge the gap between Maven's lifecycle and your engine's dependencies.
 
-        final var runner = injector.getInstance(FacepalmScanner.FacepalmRunner.class);
+        final var runner = injector.getInstance(FacepalmRunner.class);
         final var config = injector.getInstance(FacepalmConfig.class);
         final var log = injector.getInstance(Log.class);
 

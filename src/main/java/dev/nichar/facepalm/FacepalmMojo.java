@@ -30,7 +30,8 @@ import dev.nichar.facepalm.module.FacepalmLogModule;
 
 
 /**
- * Maven Mojo that runs Facepalm security scans during the {@code verify} phase.
+ * Maven Mojo that executes security scans during the {@code verify} phase.
+ * Aggregates configuration into an immutable context and bootstraps the Guice engine.
  */
 @Mojo(name = "scan", defaultPhase = LifecyclePhase.VERIFY, threadSafe = true, configurator = COMMA_SEPARATED_CONFIGURATOR)
 public class FacepalmMojo extends AbstractMojo {

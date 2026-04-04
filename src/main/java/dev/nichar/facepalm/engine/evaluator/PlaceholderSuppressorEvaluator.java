@@ -35,7 +35,7 @@ class PlaceholderSuppressorEvaluator implements FindingEvaluator {
         final var lowerVal = value.toLowerCase().replace("-", "_").replace(" ", "_");
         // Penalize known "fake" data keywords (e.g., "dummy", "replace_me").
         if (conf.getDummyKeywords().stream().anyMatch(lowerVal::contains)) {
-            finding.log("Dummy Keyword Penalty", 0, -80);
+            finding.log("Dummy Keyword Discount", 0, -80);
         }
     }
 }

@@ -15,7 +15,7 @@ public enum ScoringStrategy {
     },
 
     /**
-     * Geometric mean that penalizes findings with one very low value.
+     * Geometric mean that discounts findings with one very low value.
      */
     GEOMETRIC {
         public double calculate(int r, int c) {

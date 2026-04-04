@@ -48,14 +48,14 @@ public class RegexSecretExtractor implements SecretExtractor {
                 }
                 final var m = sp.getPattern().matcher(normalizedLine);
                 while (m.find()) {
-                    // Uses capture group 1 if present (the actual secret), otherwise the full match.
+                    // Extract capture group 1 if present; otherwise the full match.
                     final var secretValue = m.groupCount() >= 1 ? m.group(1) : m.group();
                     registerFinding(findings, localDedup, context, sp, secretValue, i + 1, rawLine);
                 }
             }
         }
 
-        // Multi-Line Block Scanning (e.g., RSA Private Keys).
+        // Multi-Line Block Scanning (e.g., PEM certificates).
         for (SecretPattern sp : activePatterns) {
             if (!sp.isMultiLine()) {
                 continue;
@@ -64,7 +64,7 @@ public class RegexSecretExtractor implements SecretExtractor {
             final var matcher = sp.getPattern().matcher(context.getFullContent());
             while (matcher.find()) {
                 final var secretValue = matcher.group();
-                // Calculates the exact line number by counting newline characters before the match start
+                // Map character offset to 1-based line number.
                 final var lineNum = (int) context.getFullContent()
                     .substring(0, matcher.start())
                     .chars()

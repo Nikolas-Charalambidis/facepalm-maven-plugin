@@ -18,7 +18,7 @@ import dev.nichar.facepalm.report.Reporter;
 
 
 /**
- * Orchestrates the scan lifecycle from gitignore loading to reporting.
+ * Orchestrates the full scan lifecycle, from gitignore discovery to reporting and build failure evaluation.
  */
 @Named
 @Singleton

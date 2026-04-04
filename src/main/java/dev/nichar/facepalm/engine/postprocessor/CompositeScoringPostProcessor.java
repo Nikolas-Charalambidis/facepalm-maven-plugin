@@ -13,9 +13,9 @@ import dev.nichar.facepalm.engine.Finding;
 
 
 /**
- * Evaluates the collective risk of all findings within a single file to refine individual scores.
- * It identifies high-risk files containing multiple distinct types of secrets while
- * penalizing high-volume matches (like logs or datasets) to minimize noise from repetitive hits.
+ * Refines individual finding scores based on the collective context of all findings in a file.
+ * Boosts risk for files containing multiple distinct secret types, while discounting high-volume
+ * matches (like logs or datasets) to reduce noise.
  */
 @Named
 @Singleton

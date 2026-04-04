@@ -30,7 +30,8 @@ import lombok.Getter;
 
 
 /**
- * Multithreaded engine for file discovery, filtering, and secret extraction.
+ * Concurrent engine for file discovery, filtering, and automated secret extraction.
+ * Orchestrates parallel processing of candidate files through the detection pipeline.
  */
 @Named
 @Singleton
@@ -59,7 +60,7 @@ public class ScannerEngine {
     }
 
     /**
-     * Scans a directory recursively, processing files in parallel.
+     * Recursively traverses the root directory and executes parallel scans on qualified files.
      *
      * @param root Root directory to scan.
      * @return List of identified findings.
@@ -91,7 +92,7 @@ public class ScannerEngine {
 
         log.info("Starting scan of " + tasks.size() + " files...");
 
-        // Configure a thread pool based on the engine configuration.
+        // Process files in parallel.
         final var executor = Executors.newFixedThreadPool(engineConfig.getThreads());
         try {
             final CompletionService<List<Finding>> service = new ExecutorCompletionService<>(executor);
@@ -122,12 +123,13 @@ public class ScannerEngine {
         for (final var element : path) {
             if (skipDirs.contains(element.toString())) {
                 if (engineConfig.isShowSkipped()) {
-                    log.debug("Skipping file in excluded directory [" + element + "]: " + path);
+                    log.debug("Skipping excluded directory: " + path);
                 }
                 stats.recordExclusion(ExclusionReason.REGEX_MATCH);
                 return false;
             }
         }
+
         final var fileName = path.getFileName().toString();
         // Filters out images, zip files, etc.
         if (fileName.toLowerCase().matches(engineConfig.getSkipBinaryRegex())) {
@@ -137,11 +139,12 @@ public class ScannerEngine {
             stats.recordExclusion(ExclusionReason.BINARY_FILE);
             return false;
         }
+
         try {
             // Skips large files to avoid OOM.
             if (Files.size(path) > engineConfig.getMaxFileSizeBytes()) {
                 if (engineConfig.isShowSkipped()) {
-                    log.debug("Skipping large file (> " + engineConfig.getMaxFileSizeBytes() + " bytes): " + path);
+                    log.debug("Skipping large file: " + path);
                 }
                 stats.recordExclusion(ExclusionReason.SIZE_EXCEEDED);
                 return false;

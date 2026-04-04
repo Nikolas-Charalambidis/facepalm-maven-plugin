@@ -21,7 +21,7 @@ class EntropyEvaluator implements FindingEvaluator {
 
     @Override
     public void evaluate(@Nonnull final Finding finding, @Nonnull final FileContext context) {
-        // Skips entropy analysis for Private Keys, as their structured format is already high-signal.
+        // Skip entropy check for Private Keys; the format itself is high-signal.
         if (finding.getPatternName().contains("Private Key") || finding.getSecretValue().contains("-----")) {
             return;
         }

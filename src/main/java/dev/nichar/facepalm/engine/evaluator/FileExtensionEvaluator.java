@@ -12,7 +12,7 @@ import dev.nichar.facepalm.engine.Finding;
 
 /**
  * Adjusts finding scores based on the file extension.
- * Prioritizes sensitive configuration files and penalizes findings in low-risk files like logs or documentation.
+ * Prioritizes sensitive configuration files and discounts findings in low-risk files like logs or documentation.
  */
 @Named
 @Singleton

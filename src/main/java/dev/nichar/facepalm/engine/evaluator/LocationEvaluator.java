@@ -23,8 +23,7 @@ class LocationEvaluator implements FindingEvaluator {
 
     @Override
     public void evaluate(@Nonnull final Finding finding, @Nonnull final FileContext context) {
-        String path = context.getPath().toString().toLowerCase();
-
+        final var path = context.getPath().toString().toLowerCase();
         final var conf = config.getEvaluators();
         // Increase score for secrets in production-bound paths.
         if (conf.getProdPathMarkers().stream().anyMatch(path::contains)) {

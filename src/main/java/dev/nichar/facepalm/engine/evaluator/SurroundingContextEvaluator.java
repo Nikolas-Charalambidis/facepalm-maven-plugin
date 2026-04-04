@@ -23,7 +23,7 @@ class SurroundingContextEvaluator implements FindingEvaluator {
     @Override
     public void evaluate(@Nonnull final Finding finding, @Nonnull final FileContext context) {
         final int idx = finding.getLineNumber() - 1;
-        // Concatenate neighboring lines into a searchable string.
+        // Search a window of neighboring lines.
         final var chunk = (context.getLineOrEmpty(idx - 1) + " " +
             context.getLineOrEmpty(idx) + " " +
             context.getLineOrEmpty(idx + 1)).toLowerCase();

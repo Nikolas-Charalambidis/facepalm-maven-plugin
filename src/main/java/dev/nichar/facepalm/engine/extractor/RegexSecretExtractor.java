@@ -87,7 +87,17 @@ public class RegexSecretExtractor implements SecretExtractor {
                                  final int lineNum,
                                  @Nonnull final String snippet) {
 
-        final var hash = hashString(sp.getName() + value + lineNum);
+        // Deduplication logic: If the SAME secret appears multiple times in the SAME file on DIFFERENT lines.
+        // It's treated as one finding, but we track all its occurrences.
+        final var hash = hashString(sp.getName() + value);
+        final var existing = findings.stream().filter(f -> f.getDeduplicationHash().equals(hash)).findFirst();
+
+        if (existing.isPresent()) {
+            // Already found this secret in this file; ignore additional occurrences
+            // One finding per file for the same secret.
+            return;
+        }
+
         if (dedup.add(hash)) {
             final var f = Finding.builder()
                 .patternName(sp.getName())

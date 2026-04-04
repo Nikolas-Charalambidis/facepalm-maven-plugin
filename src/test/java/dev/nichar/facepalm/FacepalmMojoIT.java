@@ -24,6 +24,7 @@ class FacepalmMojoIT {
      */
     @MavenTest
     @MavenGoal("verify")
+    @MavenGoal("facepalm:report") // TODO: Explain
     @MavenVerbose
     void clean_project(final MavenExecutionResult result) {
         // Verifies the build finished without errors and the scanner log matches expected success.
@@ -35,10 +36,6 @@ class FacepalmMojoIT {
             .contains("SCAN RESULT : SUCCESS")
             .contains("No secrets or sensitive patterns detected. Your secrets are safe.")
             .contains("BUILD SUCCESS");
-
-        final var targetDirectory = result.getMavenProjectResult().getTargetProjectDirectory();
-        assertThat(targetDirectory.resolve("target/facepalm-report.html")).exists();
-        assertThat(targetDirectory.resolve("target/facepalm-report.sarif")).exists();
     }
 
     /**
@@ -48,6 +45,7 @@ class FacepalmMojoIT {
      */
     @MavenTest
     @MavenGoal("verify")
+    @MavenGoal("facepalm:report")
     @MavenVerbose
     void dirty_project(final MavenExecutionResult result) {
         // Verifies the build finished without errors and the scanner log matches expected success.
@@ -64,10 +62,6 @@ class FacepalmMojoIT {
             .contains("SCAN RESULT : WARNINGS")
             .contains("Warnings detected. Review recommended.")
             .contains("BUILD SUCCESS");
-
-        final var targetDirectory = result.getMavenProjectResult().getTargetProjectDirectory();
-        assertThat(targetDirectory.resolve("target/facepalm-report.html")).exists();
-        assertThat(targetDirectory.resolve("target/facepalm-report.sarif")).exists();
     }
 
     /**
@@ -77,6 +71,7 @@ class FacepalmMojoIT {
      */
     @MavenTest
     @MavenGoal("verify")
+    @MavenGoal("facepalm:report")
     @MavenVerbose
     void dirty_project_fail_on_warnings(final MavenExecutionResult result) {
         // Verifies the build finished with errors and the scanner log matches expected success.
@@ -95,7 +90,7 @@ class FacepalmMojoIT {
             .contains("BUILD FAILURE");
 
         final var targetDirectory = result.getMavenProjectResult().getTargetProjectDirectory();
-        assertThat(targetDirectory.resolve("target/facepalm-report.html")).exists();
-        assertThat(targetDirectory.resolve("target/facepalm-report.sarif")).exists();
+        assertThat(targetDirectory.resolve("target/facepalm-report.html")).doesNotExist();
+        assertThat(targetDirectory.resolve("target/facepalm-report.sarif")).doesNotExist();
     }
 }

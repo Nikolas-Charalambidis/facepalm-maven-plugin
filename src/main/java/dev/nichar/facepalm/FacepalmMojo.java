@@ -1,5 +1,10 @@
 package dev.nichar.facepalm;
 
+import static dev.nichar.facepalm.configurator.CommaSeparatedConfigurator.COMMA_SEPARATED_CONFIGURATOR;
+
+import java.io.File;
+import java.util.Set;
+
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -12,9 +17,6 @@ import org.eclipse.sisu.space.BeanScanning;
 import org.eclipse.sisu.space.SpaceModule;
 import org.eclipse.sisu.space.URLClassSpace;
 import org.eclipse.sisu.wire.WireModule;
-
-import java.io.File;
-import java.util.Set;
 
 import com.google.inject.Guice;
 import dev.nichar.facepalm.config.EngineConfig;
@@ -34,7 +36,7 @@ import dev.nichar.facepalm.module.FacepalmLogModule;
  * @author Nikolas Charalambidis
  * @since 1.0.0
  */
-@Mojo(name = "scan", defaultPhase = LifecyclePhase.VERIFY, threadSafe = true)
+@Mojo(name = "scan", defaultPhase = LifecyclePhase.VERIFY, threadSafe = true, configurator = COMMA_SEPARATED_CONFIGURATOR)
 public class FacepalmMojo extends AbstractMojo {
 
     /**
@@ -78,10 +80,7 @@ public class FacepalmMojo extends AbstractMojo {
     /**
      * Regex to identify binary files.
      */
-    @Parameter(
-        property = "skipBinaryRegex",
-        defaultValue = ".*\\.(png|jpg|jpeg|gif|pdf|zip|jar|class|tar|gz|exe|dll)$"
-    )
+    @Parameter(property = "skipBinaryRegex", defaultValue = ".*\\.(png|jpg|jpeg|gif|pdf|zip|jar|class|tar|gz|exe|dll)$")
     private String skipBinaryRegex;
 
     /**
@@ -158,7 +157,6 @@ public class FacepalmMojo extends AbstractMojo {
     @Parameter
     private PostProcessorConfig postProcessing = new PostProcessorConfig();
 
-
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
 
@@ -201,7 +199,7 @@ public class FacepalmMojo extends AbstractMojo {
 
         log.info("Starting facepalm-maven-plugin " + pluginDescriptor.getVersion());
 
-        final var rootFile = this.root != null ? this.root : baseDir;
+        final var rootFile = root != null ? root : baseDir;
         final var rootPath = rootFile.toPath().toAbsolutePath().normalize();
 
         try {

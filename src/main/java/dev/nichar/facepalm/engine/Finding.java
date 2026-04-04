@@ -36,8 +36,8 @@ public class Finding {
     private final List<String> scoreHistory = new ArrayList<>();
 
     public void log(String rule, int rDelta, int cDelta) {
-        this.riskScore = Math.max(0, Math.min(100, this.riskScore + rDelta));
-        this.confidenceScore = Math.max(0, Math.min(100, this.confidenceScore + cDelta));
+        riskScore = Math.max(0, Math.min(100, riskScore + rDelta));
+        confidenceScore = Math.max(0, Math.min(100, confidenceScore + cDelta));
         scoreHistory.add(String.format("%s (%+d/%+d)", rule, rDelta, cDelta));
     }
 

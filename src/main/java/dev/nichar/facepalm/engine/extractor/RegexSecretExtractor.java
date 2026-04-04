@@ -8,63 +8,97 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 
+import javax.annotation.Nonnull;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import dev.nichar.facepalm.FacepalmConfig;
 import dev.nichar.facepalm.engine.FileContext;
 import dev.nichar.facepalm.engine.Finding;
 import dev.nichar.facepalm.pattern.SecretPattern;
 
 
+/**
+ * Scans file content using pre-defined regular expressions to identify potential secrets.
+ * It supports both single-line pattern matching for speed and multi-line regex for complex
+ * structures like PEM certificates, using SHA-256 hashing to ensure finding uniqueness.
+ */
 @Named
 @Singleton
 public class RegexSecretExtractor implements SecretExtractor {
+
     @Inject
-    private dev.nichar.facepalm.FacepalmConfig config;
+    private FacepalmConfig config;
 
     @Override
-    public List<Finding> extract(FileContext context) {
-        List<Finding> findings = new ArrayList<>();
-        Set<String> localDedup = new HashSet<>();
-        List<SecretPattern> activePatterns = config.getPatterns().getOverrides();
+    public List<Finding> extract(@Nonnull final FileContext context) {
+        final List<Finding> findings = new ArrayList<>();
+        final Set<String> localDedup = new HashSet<>();
+        final List<SecretPattern> activePatterns = config.getPatterns().getOverrides();
 
+        // Single-Line Scanning.
         for (int i = 0; i < context.getLines().size(); i++) {
-            String rawLine = context.getLines().get(i);
-            String normalizedLine = rawLine.replace("\"", "").replace("'", "");
+            final var rawLine = context.getLines().get(i);
+            final var normalizedLine = rawLine.replace("\"", "").replace("'", "");
 
-            for (SecretPattern sp : activePatterns) {
+            for (final var sp : activePatterns) {
                 if (sp.isMultiLine()) {
+                    // Skip multi-line patterns to avoid redundant processing here.
                     continue;
                 }
-                Matcher m = sp.getPattern().matcher(normalizedLine);
+                final var m = sp.getPattern().matcher(normalizedLine);
                 while (m.find()) {
-                    String secretValue = m.groupCount() >= 1 ? m.group(1) : m.group();
+                    // Uses capture group 1 if present (the actual secret), otherwise the full match.
+                    final var secretValue = m.groupCount() >= 1 ? m.group(1) : m.group();
                     registerFinding(findings, localDedup, context, sp, secretValue, i + 1, rawLine);
                 }
             }
         }
 
+        // Multi-Line Block Scanning (e.g., RSA Private Keys).
         for (SecretPattern sp : activePatterns) {
             if (!sp.isMultiLine()) {
                 continue;
             }
-            Matcher m = sp.getPattern().matcher(context.getFullContent());
-            while (m.find()) {
-                String secretValue = m.group();
-                int lineNum = (int) context.getFullContent().substring(0, m.start())
-                    .chars().filter(ch -> ch == '\n').count() + 1;
+            // Scans the entire file as one string.
+            final var matcher = sp.getPattern().matcher(context.getFullContent());
+            while (matcher.find()) {
+                final var secretValue = matcher.group();
+                // Calculates the exact line number by counting newline characters before the match start
+                final var lineNum = (int) context.getFullContent()
+                    .substring(0, matcher.start())
+                    .chars()
+                    .filter(ch -> ch == '\n')
+                    .count() + 1;
                 registerFinding(findings, localDedup, context, sp, secretValue, lineNum, "[MULTI-LINE BLOCK]");
             }
         }
         return findings;
     }
 
-    private void registerFinding(List<Finding> findings, Set<String> dedup, FileContext ctx,
-                                 SecretPattern sp, String value, int lineNum, String snippet) {
-        String hash = hashString(sp.getName() + value + lineNum);
+    /**
+     * Constructs a Finding object and adds it to the list if its unique hash hasn't been seen yet.
+     *
+     * @param findings The list of total findings for the current file.
+     * @param dedup Set of existing hashes to prevent duplicates.
+     * @param ctx The current file context.
+     * @param sp The specific pattern that triggered the match.
+     * @param value The extracted secret string.
+     * @param lineNum The 1-based line number where the secret begins.
+     * @param snippet A preview of the line for reporting purposes.
+     */
+    private void registerFinding(@Nonnull final List<Finding> findings,
+                                 @Nonnull final Set<String> dedup,
+                                 @Nonnull final FileContext ctx,
+                                 @Nonnull final SecretPattern sp,
+                                 @Nonnull final String value,
+                                 final int lineNum,
+                                 @Nonnull final String snippet) {
+
+        final var hash = hashString(sp.getName() + value + lineNum);
         if (dedup.add(hash)) {
-            Finding f = Finding.builder()
+            final var f = Finding.builder()
                 .patternName(sp.getName())
                 .deduplicationHash(hash)
                 .secretValue(value)
@@ -79,12 +113,18 @@ public class RegexSecretExtractor implements SecretExtractor {
         }
     }
 
-    private String hashString(String input) {
+    /**
+     * Generates an SHA-256 hex string to uniquely identify a finding.
+     *
+     * @param input The combined string of pattern name, value, and line number.
+     * @return A 64-character hex string, or the string's hashCode as a fallback.
+     */
+    private String hashString(@Nonnull final String input) {
         try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            byte[] hash = md.digest(input.getBytes());
-            StringBuilder hexString = new StringBuilder();
-            for (byte b : hash) {
+            final var messageDigest = MessageDigest.getInstance("SHA-256");
+            final var hash = messageDigest.digest(input.getBytes());
+            final var hexString = new StringBuilder();
+            for (final var b : hash) {
                 hexString.append(String.format("%02x", b));
             }
             return hexString.toString();

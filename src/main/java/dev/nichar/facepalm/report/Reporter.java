@@ -53,13 +53,13 @@ public class Reporter {
     @Inject
     public Reporter(@Nullable Log log, FacepalmConfig context) {
         this.log = log != null ? log : new org.apache.maven.plugin.logging.SystemStreamLog();
-        this.cfg = new Configuration(Configuration.VERSION_2_3_32);
-        this.cfg.setClassForTemplateLoading(Reporter.class, "/templates");
-        this.cfg.setDefaultEncoding("UTF-8");
-        this.cfg.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
-        this.cfg.setLogTemplateExceptions(false);
-        this.cfg.setWrapUncheckedExceptions(true);
-        this.cfg.setFallbackOnNullLoopVariable(false);
+        cfg = new Configuration(Configuration.VERSION_2_3_32);
+        cfg.setClassForTemplateLoading(Reporter.class, "/templates");
+        cfg.setDefaultEncoding("UTF-8");
+        cfg.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
+        cfg.setLogTemplateExceptions(false);
+        cfg.setWrapUncheckedExceptions(true);
+        cfg.setFallbackOnNullLoopVariable(false);
     }
 
     public void performReporting(List<Finding> findings,
@@ -154,7 +154,7 @@ public class Reporter {
                     .aggregateScore(primary.getNumericScore())
                     .secret(primary.getSecretValue())
                     .maskedSecret(primary.getMaskedSecret())
-                    .fingerprint(fingerprint)
+                    .hash(fingerprint)
                     .scoreHistory(primary.getScoreHistory())
                     .occurrences(occs.stream().map(f -> ScanReport.Occurrence.builder()
                         .relativePath(f.getContext().getPath().toString())
@@ -169,7 +169,7 @@ public class Reporter {
         return ScanReport.builder()
             .metadata(ScanReport.RunMetadata.builder()
                 .scannerVersion(version)
-                .timestamp(Instant.now().toString())
+                .timestamp(Instant.now())
                 .rootPath(rootPath)
                 .build())
             .summary(ScanReport.ScanSummary.builder()

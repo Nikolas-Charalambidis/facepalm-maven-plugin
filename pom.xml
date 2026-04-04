@@ -142,6 +142,19 @@
                 <version>${org.apache.maven.plugin-tools.version}</version>
             </plugin>
 
+            <plugin>
+                <groupId>org.codehaus.plexus</groupId>
+                <artifactId>plexus-component-metadata</artifactId>
+                <version>2.1.1</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>generate-metadata</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
             <!-- Test Preparation: Installs the plugin into a temporary local repository so integration tests run against the latest build. -->
             <plugin>
                 <groupId>com.soebes.itf.jupiter.extension</groupId>

@@ -1,14 +1,12 @@
 package dev.nichar.facepalm.engine;
 
 /**
- * Defines the mathematical strategies for merging raw Risk and Confidence scores.
- * Since findings are discovered with a base Risk (how bad it is) and Confidence (how likely it's real),
- * these strategies determine the final "Threat Level" that triggers build failures or alerts.
+ * Mathematical strategies for merging Risk and Confidence scores into a final Threat Level.
  */
 public enum ScoringStrategy {
 
     /**
-     * Standard arithmetic mean. Balanced and predictable.
+     * Standard arithmetic mean for a balanced and predictable score.
      */
     AVERAGE {
         public double calculate(int r, int c) {
@@ -17,8 +15,7 @@ public enum ScoringStrategy {
     },
 
     /**
-     * Geometric mean. Penalizes findings where one value is very low.
-     * Often used to ensure a high score requires *both* high risk and high confidence.
+     * Geometric mean that penalizes findings with one very low value.
      */
     GEOMETRIC {
         public double calculate(int r, int c) {
@@ -27,8 +24,7 @@ public enum ScoringStrategy {
     },
 
     /**
-     * Root Mean Square (Quadratic Mean).
-     * Favors higher values; a very high Risk will pull the average up more than a low Confidence pulls it down.
+     * Root Mean Square (Quadratic Mean) that favors higher values.
      */
     ROOT_MEAN_SQUARE {
         public double calculate(int r, int c) {
@@ -37,8 +33,7 @@ public enum ScoringStrategy {
     },
 
     /**
-     * Heavily weights the square of the Risk score.
-     * Designed for environments where extreme risks must be surfaced regardless of confidence.
+     * Weights the square of the Risk score to surface extreme risks regardless of confidence.
      */
     WEIGHTED_QUADRATIC {
         public double calculate(int r, int c) {
@@ -48,8 +43,7 @@ public enum ScoringStrategy {
     },
 
     /**
-     * Strict logic: If Risk is critical (>90), it ignores the average and takes the maximum value.
-     * Otherwise, it defaults to a standard 50/50 split.
+     * Uses the maximum value if Risk is critical (>90); otherwise defaults to a 50/50 split.
      */
     GATEKEEPER {
         public double calculate(int r, int c) {
@@ -61,11 +55,7 @@ public enum ScoringStrategy {
     };
 
     /**
-     * Calculates the final composite score based on the chosen strategy.
-     *
-     * @param risk The raw risk score (0-100).
-     * @param confidence The raw confidence score (0-100).
-     * @return The calculated threat level.
+     * Calculates the final composite score based on the strategy.
      */
     public abstract double calculate(int risk, int confidence);
 }

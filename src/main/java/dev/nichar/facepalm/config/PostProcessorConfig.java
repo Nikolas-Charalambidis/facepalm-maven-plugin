@@ -6,10 +6,7 @@ import lombok.NoArgsConstructor;
 
 
 /**
- * Configuration for noise reduction and cleanup after the initial scan.
- *
- * @author Nikolas Charalambidis
- * @since 1.0.0
+ * Configuration for post-scan noise reduction and cleanup.
  */
 @Data
 @NoArgsConstructor
@@ -17,9 +14,7 @@ import lombok.NoArgsConstructor;
 public class PostProcessorConfig {
 
     /**
-     * The limit at which a specific secret value is considered "noise."
-     * If the same match is found more than this many times across the project,
-     * it is likely a false positive (e.g., a common variable name or public constant) and will be suppressed in the final report.
+     * Maximum occurrences allowed before a secret is suppressed as noise.
      */
     private int highVolumeThreshold = 15;
 }

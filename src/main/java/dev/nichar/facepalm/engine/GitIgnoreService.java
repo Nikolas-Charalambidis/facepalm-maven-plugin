@@ -21,9 +21,7 @@ import org.apache.maven.plugin.logging.SystemStreamLog;
 
 
 /**
- * Parses and manages {@code .gitignore} files to filter out files from the scan.
- * It recursively discovers ignore files, converts patterns into glob matchers,
- * and provides a lookup to check if a specific path should be excluded.
+ * Manages {@code .gitignore} files to filter paths from the scan.
  */
 @Named
 @Singleton
@@ -32,8 +30,7 @@ public class GitIgnoreService {
     private final Log log;
 
     /**
-     * Maps directory paths to their respective list of compiled glob patterns.
-     * ses a TreeMap to ensure paths are processed in a consistent, sorted order.
+     * Maps directory paths to their compiled glob patterns.
      */
     private final TreeMap<Path, List<PathMatcher>> registry = new TreeMap<>();
 
@@ -43,9 +40,7 @@ public class GitIgnoreService {
     }
 
     /**
-     * Recursively walks the project root to find and parse every {@code .gitignore} file.
-     *
-     * @param root The base directory to start searching for ignore files.
+     * Discovers and parses all {@code .gitignore} files under the root directory.
      */
     public void loadAllGitIgnores(@Nonnull final Path root) {
         try (Stream<Path> paths = Files.walk(root)) {
@@ -57,10 +52,7 @@ public class GitIgnoreService {
     }
 
     /**
-     * Checks if a given file path matches any discovered ignore patterns from its parent directories.
-     *
-     * @param filePath The path of the file to check for exclusion.
-     * @return {@code true} if the file is matched by an ignore pattern, {@code false} otherwise.
+     * Checks if a path matches any discovered ignore patterns.
      */
     public boolean isIgnored(@Nonnull final Path filePath) {
         return registry.entrySet().stream()
@@ -70,11 +62,7 @@ public class GitIgnoreService {
     }
 
     /**
-     * Reads a single ignore file and converts its text patterns into functional {@link PathMatcher}.
-     *
-     * @param ignoreFile The path to the {@code .gitignore} file to process.
-     *
-     * @see <a href="https://en.wikipedia.org/wiki/Glob_(programming)">Wikipedia</a>
+     * Converts ignore patterns from a file into functional {@link PathMatcher}s.
      */
     private void parseGitIgnoreFile(@Nonnull final Path ignoreFile) {
         final var directory = ignoreFile.getParent();

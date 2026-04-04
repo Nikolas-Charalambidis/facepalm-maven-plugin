@@ -8,17 +8,13 @@ import dev.nichar.facepalm.engine.Finding;
 
 
 /**
- * Defines a strategic contract for components that analyze and decorate scan results.
- * Implementations can modify a finding's severity, add context, or lower its risk score
- * based on the specific environmental data provided by the {@link FileContext}.
+ * Contract for components that analyze and decorate scan findings.
+ * Implementations can modify a finding's risk score or severity based on file context.
  */
 public interface FindingEvaluator {
 
     /**
-     * Processes an individual finding to apply rules-based logic or scoring adjustments.
-     *
-     * @param finding The identified secret or issue to be evaluated and potentially modified.
-     * @param context Metadata and content of the file where the finding was discovered.
+     * Evaluates a finding and potentially modifies its scores or metadata.
      */
     void evaluate(@Nonnull Finding finding, @Nonnull FileContext context);
 }

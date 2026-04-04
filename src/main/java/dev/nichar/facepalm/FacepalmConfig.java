@@ -13,10 +13,7 @@ import lombok.RequiredArgsConstructor;
 
 
 /**
- * Aggregates plugin nested {@link Parameter} configurations into a single hierarchical configuration structure.
- *
- * @author Nikolas Charalambidis
- * @since 1.0.0
+ * Aggregates plugin configurations into a single hierarchical structure.
  */
 @Data
 @AllArgsConstructor
@@ -24,27 +21,27 @@ import lombok.RequiredArgsConstructor;
 public class FacepalmConfig {
 
     /**
-     * Configuration for the scanning engine execution and file filtering.
+     * Scanning engine execution and file filtering settings.
      */
     private EngineConfig engine = new EngineConfig();
 
     /**
-     * Configuration for how findings are scored and when the build should be interrupted.
+     * Finding scoring and build interruption thresholds.
      */
     private ScoringConfig scoring = new ScoringConfig();
 
     /**
-     * Heuristic configuration used to evaluate the risk and legitimacy of discovered secrets.
+     * Risk and legitimacy heuristics for discovered secrets.
      */
     private EvaluatorConfig evaluators = new EvaluatorConfig();
 
     /**
-     * Configuration for noise reduction and cleanup after the initial scan.
+     * Noise reduction and post-scan cleanup settings.
      */
     private PostProcessorConfig postProcessing = new PostProcessorConfig();
 
     /**
-     * Configuration for defining or overriding secret detection patterns.
+     * Secret detection pattern definitions and overrides.
      */
     private PatternConfig patterns = new PatternConfig();
 }

@@ -11,9 +11,8 @@ import dev.nichar.facepalm.engine.Finding;
 
 
 /**
- * Adjusts finding scores based on the file extension to prioritize sensitive configuration files.
- * It increases the risk level for high-exposure files (like .env or .yaml) and penalizes
- * findings found in low-risk files (like documentation or logs) to reduce noise.
+ * Adjusts finding scores based on the file extension.
+ * Prioritizes sensitive configuration files and penalizes findings in low-risk files like logs or documentation.
  */
 @Named
 @Singleton
@@ -26,14 +25,12 @@ class FileExtensionEvaluator implements FindingEvaluator {
     public void evaluate(@Nonnull final Finding finding, @Nonnull final FileContext context) {
         final var fileName = context.getPath().getFileName().toString().toLowerCase();
 
-        // Checks if the file matches extensions known for sensitive data (e.g., .tfvars, .properties).
+        // Increase score for sensitive configuration files (e.g., .env, .properties).
         if (config.getEvaluators().getHighRiskExtensions().stream().anyMatch(fileName::endsWith)) {
-            // Increases both the raw score and severity because secrets in config files are highly exploitable.
             finding.log("High Risk Configuration File", 15, 20);
         }
-        // Checks if the file belongs to a lower-priority category (e.g., .md, .txt, .log).
+        // Decrease score for lower-priority files (e.g., .md, .txt, .log).
         else if (config.getEvaluators().getLowRiskExtensions().stream().anyMatch(fileName::endsWith)) {
-            // Significantly drops the score, as secrets in documentation are often examples or false positives.
             finding.log("Documentation/Log File", -30, -40);
         }
     }

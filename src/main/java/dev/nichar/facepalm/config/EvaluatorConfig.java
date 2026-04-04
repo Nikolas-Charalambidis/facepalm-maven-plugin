@@ -10,10 +10,7 @@ import lombok.NoArgsConstructor;
 
 
 /**
- * Heuristic configuration used to evaluate the risk and legitimacy of discovered secrets.
- *
- * @author Nikolas Charalambidis
- * @since 1.0.0
+ * Heuristic configuration for evaluating the risk and legitimacy of discovered secrets.
  */
 @Data
 @NoArgsConstructor
@@ -21,29 +18,27 @@ import lombok.NoArgsConstructor;
 public class EvaluatorConfig {
 
     /**
-     * Regex used to detect interpolated values or placeholders.
-     * Helps identify non-sensitive templates like ${API_KEY}.
+     * Regex to detect interpolated values or placeholders like ${API_KEY}.
      */
     private String interpolationPatternRegex = ".*?(?:\\$\\{.*}|\\{\\{.*}|<.*>|%.*%|\\[.*]).*";
 
     /**
-     * Compiled version of the interpolation regex for performance.
-     * Marked transient to indicate it is computed at runtime, not injected.
+     * Compiled interpolation regex for performance.
      */
     private transient Pattern interpolationPattern;
 
     /**
-     * Extensions that increase the risk score. Defaults to common sensitive formats.
+     * File extensions that increase the risk score.
      */
     private Set<String> highRiskExtensions = Set.of(".env", ".properties", ".yml", ".yaml", ".conf", ".ini");
 
     /**
-     * Extensions that decrease the risk score. Defaults to documentation and logs.
+     * File extensions that decrease the risk score.
      */
     private Set<String> lowRiskExtensions = Set.of(".md", ".txt", ".csv", ".log", ".example", ".sample");
 
     /**
-     * Keywords indicating that a match is likely a placeholder or fake data.
+     * Keywords indicating a match is likely a placeholder or fake data.
      */
     private Set<String> dummyKeywords = Set.of(
         "dummy", "your_api_key", "insert_here", "placeholder", "place_holder", "replace_me", "changeme", "change_me");
@@ -59,20 +54,17 @@ public class EvaluatorConfig {
     private List<String> testPathMarkers = List.of("test", "mock", "spec");
 
     /**
-     * Keywords found in surrounding code context indicating production use.
+     * Surrounding code keywords indicating production use.
      */
     private List<String> prodContextMarkers = List.of("prod", "live");
 
     /**
-     * Keywords found in surrounding code context indicating mock or example use.
+     * Surrounding code keywords indicating mock or example use.
      */
     private List<String> mockContextMarkers = List.of("example", "dummy", "fake", "mock");
 
     /**
-     * Lazily compiles the pattern using the current regex value.
-     * This ensures that user overrides from Mojo or CLI are captured before the pattern is locked in.
-     *
-     * @return The compiled {@link Pattern} for template detection.
+     * Returns the compiled interpolation pattern, initializing it if necessary.
      */
     public Pattern getInterpolationPattern() {
         if (interpolationPattern == null) {

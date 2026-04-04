@@ -10,9 +10,6 @@ import lombok.NoArgsConstructor;
 
 /**
  * Configuration for the scanning engine execution and file filtering.
- *
- * @author Nikolas Charalambidis
- * @since 1.0.0
  */
 @Data
 @NoArgsConstructor
@@ -20,65 +17,53 @@ import lombok.NoArgsConstructor;
 public class EngineConfig {
 
     /**
-     * Default directory names to ignore during file traversal if no overrides are provided.
+     * Default directories to ignore during file traversal.
      */
     public static final Set<String> SKIP_DIRS = Set.of(".git", ".idea");
 
     /**
-     * The number of concurrent threads used for scanning.
-     * Defaults to the number of available processors on the host system.
+     * Number of concurrent threads used for scanning.
      */
     private Integer threads = Runtime.getRuntime().availableProcessors();
 
     /**
-     * The maximum allowed size of a file (in bytes) to be scanned.
-     * Files exceeding this limit are ignored to prevent memory exhaustion.
-     * Default is 5MB.
+     * Maximum file size in bytes; larger files are ignored to prevent memory exhaustion.
      */
     @Getter
     private long maxFileSizeBytes = 5 * 1024 * 1024;
 
     /**
-     * A regular expression used to identify binary or non-text files based on their extension.
-     * Matching files are automatically excluded from the scan.
+     * Regex for identifying binary or non-text files to exclude from the scan.
      */
     @Getter
     private String skipBinaryRegex = ".*\\.(png|jpg|jpeg|gif|pdf|zip|jar|class|tar|gz|exe|dll)$";
 
     /**
-     * A set of directory names to be skipped during the recursive file scan.
-     * If null, the engine uses the internal defaults defined in {@link #SKIP_DIRS}.
+     * Directories to skip during the recursive scan.
      */
     private Set<String> skipDirs;
 
     /**
-     * When true, the engine logs a confirmation message for every file that was successfully analyzed.
+     * If true, logs every file that was successfully analyzed.
      */
     @Getter
     private boolean showProcessed = false;
 
     /**
-     * When true, the engine logs details about files that were skipped due to size or type filters.
+     * If true, logs details about skipped files.
      */
     @Getter
     private boolean showSkipped = false;
 
     /**
-     * Resolves the number of threads to be used for scanning.
-     * <p>
-     * Returns the user-configured value if provided via Maven configuration;
-     * otherwise falls back to the number of available processors on the host system.
-     *
-     * @return The effective number of threads to use, always greater than zero.
+     * Returns the configured thread count or defaults to available processors.
      */
     public Integer getThreads() {
         return threads != null ? threads : Runtime.getRuntime().availableProcessors();
     }
 
     /**
-     * Resolves the directory skip-list, returning user-defined overrides or falling back to defaults.
-     *
-     * @return A non-null set of directory names to ignore during the scan.
+     * Returns the user-defined skip list or falls back to internal defaults.
      */
     public Set<String> getSkipDirs() {
         return skipDirs != null ? skipDirs : SKIP_DIRS;

@@ -30,8 +30,7 @@ import lombok.Getter;
 
 
 /**
- * The core multithreaded engine responsible for file discovery, filtering, and secret extraction.
- * It manages a pool of workers to process files in parallel, applying extractors, evaluators, and post-processors.
+ * Multithreaded engine for file discovery, filtering, and secret extraction.
  */
 @Named
 @Singleton
@@ -60,12 +59,10 @@ public class ScannerEngine {
     }
 
     /**
-     * Performs a full directory scan, discovering files and processing them across multiple threads.
+     * Scans a directory recursively, processing files in parallel.
      *
-     * @param root The root directory to begin the recursive file walk.
-     * @return A list of all identified {@link Finding} objects across all processed files.
-     * @throws InterruptedException If the thread pool is interrupted during execution.
-     * @throws IOException If an error occurs while accessing the file system.
+     * @param root Root directory to scan.
+     * @return List of identified findings.
      */
     @Nonnull
     public List<Finding> scan(@Nonnull final Path root) throws InterruptedException, IOException {
@@ -94,8 +91,7 @@ public class ScannerEngine {
 
         log.info("Starting scan of " + tasks.size() + " files...");
 
-        // Configures a thread pool based on the user-defined thread count in the POM.
-        // TODO: Java 19:  Use try-with-resources for ExecutorService if on Java 19+, otherwise manual shutdown is required.
+        // Configure a thread pool based on the engine configuration.
         final var executor = Executors.newFixedThreadPool(engineConfig.getThreads());
         try {
             final CompletionService<List<Finding>> service = new ExecutorCompletionService<>(executor);
@@ -118,11 +114,7 @@ public class ScannerEngine {
     }
 
     /**
-     * Evaluates a file against exclusion criteria such as directory blacklists, binary regex, and size limits.
-     *
-     * @param path The path of the file to check.
-     * @param stats The statistics object to record the specific reason for exclusion.
-     * @return {@code true} if the file should be scanned, {@code false} otherwise.
+     * Checks if a file should be scanned based on size, extension, and exclusion rules.
      */
     private boolean shouldScan(@Nonnull final Path path, @Nonnull final ScanStatistics stats) {
         final var engineConfig = context.getEngine();
@@ -146,7 +138,7 @@ public class ScannerEngine {
             return false;
         }
         try {
-            // Avoids java.lang.OutOfMemoryError by skipping massive logs or data dumps.
+            // Skips large files to avoid OOM.
             if (Files.size(path) > engineConfig.getMaxFileSizeBytes()) {
                 if (engineConfig.isShowSkipped()) {
                     log.debug("Skipping large file (> " + engineConfig.getMaxFileSizeBytes() + " bytes): " + path);
@@ -163,10 +155,7 @@ public class ScannerEngine {
     }
 
     /**
-     * Reads the file content and executes the extraction pipeline (extract -> evaluate -> post-process).
-     *
-     * @param path The path of the file to process.
-     * @return A list of findings discovered within the file.
+     * Processes a single file through the extraction, evaluation, and post-processing pipeline.
      */
     @Nonnull
     private List<Finding> processFile(@Nonnull final Path path) {

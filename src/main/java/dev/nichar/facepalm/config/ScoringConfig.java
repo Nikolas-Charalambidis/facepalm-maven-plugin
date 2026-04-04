@@ -6,10 +6,7 @@ import lombok.NoArgsConstructor;
 
 
 /**
- * Configuration for how findings are scored and when the build should be interrupted.
- *
- * @author Nikolas Charalambidis
- * @since 1.0.0
+ * Configuration for finding scores and build interruption thresholds.
  */
 @Data
 @NoArgsConstructor
@@ -17,38 +14,32 @@ import lombok.NoArgsConstructor;
 public class ScoringConfig {
 
     /**
-     * The score threshold (0-100) at or above which a finding is classified as a high-risk error.
+     * Score threshold (0-100) for high-risk errors.
      */
     private int errorThreshold = 80;
 
     /**
-     * The score threshold (0-100) at or above which a finding is classified as a moderate-risk warning.
-     * Findings scoring below this value are suppressed or treated as informational.
+     * Score threshold (0-100) for moderate-risk warnings.
      */
     private int warningThreshold = 40;
 
     /**
-     * When true, logs the breakdown of how the heuristic score was calculated
-     * for each finding to help debug false positives.
+     * If true, logs the heuristic score breakdown for each finding.
      */
     private boolean showScoring = false;
 
     /**
-     * When true, logs a detailed breakdown of files discovered, excluded,
-     * and scanned, including per-extension counts and binary file detection.
-     * Useful for debugging or auditing scan coverage. Defaults to false.
+     * If true, logs a detailed breakdown of file discovery and scan coverage.
      */
     private boolean showDetails = false;
 
     /**
-     * Whether the execution (Maven build or CLI process) should exit with a
-     * failure code if any findings meet the {@link #errorThreshold}.
+     * If true, fails the build when findings meet the error threshold.
      */
     private boolean failOnError = true;
 
     /**
-     * Whether the execution should exit with a failure code if findings
-     * meet the {@link #warningThreshold} but stay below the error threshold.
+     * If true, fails the build when findings meet the warning threshold.
      */
     private boolean failOnWarnings = false;
 }

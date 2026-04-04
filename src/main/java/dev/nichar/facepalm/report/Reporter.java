@@ -36,6 +36,9 @@ import freemarker.template.Template;
 import freemarker.template.TemplateExceptionHandler;
 
 
+/**
+ * Handles the generation of HTML and SARIF reports, and logs scan results to the console.
+ */
 @Named
 @Singleton
 public class Reporter {
@@ -62,6 +65,9 @@ public class Reporter {
         cfg.setFallbackOnNullLoopVariable(false);
     }
 
+    /**
+     * Executes the full reporting workflow, including console logging and file generation.
+     */
     public void performReporting(List<Finding> findings,
                                  ScanStatistics stats,
                                  String rootPath,
@@ -72,6 +78,9 @@ public class Reporter {
         generateSarif(report, outputPathBase.resolve("facepalm-report.sarif").toFile());
     }
 
+    /**
+     * Generates an HTML report using a Freemarker template.
+     */
     public void generateHtml(ScanReport report, Path outputPath) throws Exception {
         Template temp = cfg.getTemplate("report.html.ftl");
         File outputFile = outputPath.toFile();
@@ -86,6 +95,9 @@ public class Reporter {
         }
     }
 
+    /**
+     * Generates a SARIF report for integration with security tools and CI/CD pipelines.
+     */
     public void generateSarif(ScanReport report, File outputFile) throws Exception {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode sarif = mapper.createObjectNode();
@@ -123,6 +135,9 @@ public class Reporter {
         }
     }
 
+    /**
+     * Aggregates raw findings and statistics into a structured {@link ScanReport}.
+     */
     public ScanReport buildReport(List<Finding> findings,
                                   ScanStatistics stats,
                                   String rootPath,

@@ -30,129 +30,121 @@ import dev.nichar.facepalm.module.FacepalmLogModule;
 
 
 /**
- * Maven Mojo that executes the Facepalm security scan during the {@code verify} lifecycle phase.
- * It bootstraps a custom Guice/Sisu environment to perform dependency injection for the scanning engine.
- *
- * @author Nikolas Charalambidis
- * @since 1.0.0
+ * Maven Mojo that runs Facepalm security scans during the {@code verify} phase.
  */
 @Mojo(name = "scan", defaultPhase = LifecyclePhase.VERIFY, threadSafe = true, configurator = COMMA_SEPARATED_CONFIGURATOR)
 public class FacepalmMojo extends AbstractMojo {
 
     /**
-     * Descriptor of the current plugin, providing access to the artifact version defined in pom.xml.
+     * Plugin descriptor for version access.
      */
     @Parameter(defaultValue = "${plugin}", readonly = true)
     private PluginDescriptor pluginDescriptor;
 
     /**
-     * The project base directory.
+     * Project base directory.
      */
     @Parameter(defaultValue = "${project.basedir}", readonly = true)
     private File baseDir;
 
     /**
-     * The directory where scan reports and results will be generated.
+     * Directory for scan reports.
      */
     @Parameter(defaultValue = "${project.build.directory}", readonly = true)
     private File outputDirectory;
 
     /**
-     * The root directory for scanning operations.
+     * Root directory for scanning.
      */
     @Parameter(property = "root")
     private File root;
 
     /**
-     * The number of concurrent threads used for scanning.
-     * Defaults to the number of available processors on the host system.
+     * Concurrent threads for scanning; defaults to available processors.
      */
     @Parameter(property = "threads")
     private Integer threads;
 
     /**
-     * The maximum allowed size of a file (in bytes) to be scanned.
-     * Default is 5MB.
+     * Maximum file size in bytes (default 5MB).
      */
     @Parameter(property = "maxFileSizeBytes", defaultValue = "5242880")
     private long maxFileSizeBytes;
 
     /**
-     * Regex to identify binary files.
+     * Regex to skip binary files.
      */
     @Parameter(property = "skipBinaryRegex", defaultValue = ".*\\.(png|jpg|jpeg|gif|pdf|zip|jar|class|tar|gz|exe|dll)$")
     private String skipBinaryRegex;
 
     /**
-     * Directories to skip.
+     * Directories to exclude from scanning.
      */
     @Parameter(property = "skipDirs")
     private Set<String> skipDirs;
 
     /**
-     * Log processed files.
+     * Log every processed file.
      */
     @Parameter(property = "showProcessed", defaultValue = "false")
     private boolean showProcessed;
 
     /**
-     * Log skipped files.
+     * Log every skipped file.
      */
     @Parameter(property = "showSkipped", defaultValue = "false")
     private boolean showSkipped;
 
     /**
-     * The score threshold (0-100) at or above which a finding is classified as a high-risk error.
+     * Score threshold (0-100) for high-risk findings.
      */
     @Parameter(property = "errorThreshold", defaultValue = "80")
     private int errorThreshold;
 
     /**
-     * The score threshold (0-100) at or above which a finding is classified as a moderate-risk warning.
+     * Score threshold (0-100) for moderate-risk findings.
      */
     @Parameter(property = "warningThreshold", defaultValue = "40")
     private int warningThreshold;
 
     /**
-     * When true, logs detailed scoring breakdown.
+     * Log detailed scoring breakdowns.
      */
     @Parameter(property = "showScoring", defaultValue = "false")
     private boolean showScoring;
 
     /**
-     * When true, logs a detailed breakdown of files discovered, excluded,
-     * and scanned, including per-extension counts and binary file detection.
-     * Useful for debugging or auditing scan coverage. Defaults to false.
+     * Log discovery and exclusion details for auditing scan coverage.
      */
     @Parameter(property = "showDetails", defaultValue = "false")
     private boolean showDetails;
 
     /**
-     * Fail build if errorThreshold is reached.
+     * Fail build if any finding reaches the error threshold.
      */
     @Parameter(property = "failOnError", defaultValue = "true")
     private boolean failOnError;
 
     /**
-     * Fail build if warningThreshold is reached.
+     * Fail build if any finding reaches the warning threshold.
      */
     @Parameter(property = "failOnWarnings", defaultValue = "false")
     private boolean failOnWarnings;
 
     /**
-     * Heuristic configuration used to evaluate the risk and legitimacy of discovered secrets.
+     * Configuration for risk and legitimacy evaluators.
      */
     @Parameter
     private EvaluatorConfig evaluators = new EvaluatorConfig();
 
     /**
-     * Configuration for defining or overriding secret detection patterns.
+     * Custom or override secret detection patterns.
      */
     @Parameter
     private PatternConfig patterns = new PatternConfig();
 
     /**
-     * Configuration for noise reduction and cleanup after the initial scan.
+     * Post-processing configuration for noise reduction.
      */
     @Parameter
     private PostProcessorConfig postProcessing = new PostProcessorConfig();
@@ -160,34 +152,26 @@ public class FacepalmMojo extends AbstractMojo {
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
 
-        // Assembles the validated configuration suite from Maven parameters into an immutable DTO for the engine.
+        // Assemble configuration from Maven parameters.
         final var engine = new EngineConfig(threads, maxFileSizeBytes, skipBinaryRegex, skipDirs, showProcessed, showSkipped);
         final var scoring = new ScoringConfig(errorThreshold, warningThreshold, showScoring, showDetails, failOnError, failOnWarnings);
         final var effectiveConfig = new FacepalmConfig(engine, scoring, evaluators, postProcessing, patterns);
 
-        // Creates a Sisu ClassSpace to index classes and resources from the current ClassLoader.
-        // This enables the scanner to discover components like {@code @Named} evaluators within the plugin.
+        // Index classes and resources to discover components like {@code @Named} evaluators.
         final var space = new URLClassSpace(getClass().getClassLoader());
 
-        // Initializes the Guice injector to orchestrate dependency injection.
+        // Initialize Guice for dependency injection.
         final var injector = Guice.createInjector(
-            // Wraps modules to enable Sisu's advanced wiring, such as automatic List aggregation.
             new WireModule(
-                // Scans the ClassSpace for @Named components to register them in the container.
-                // Uses INDEX to leverage the pre-compiled JSR330 metadata generated during the Maven build.
-                // This is the most efficient strategy for production plugins.
-                // It avoids expensive classpath scanning by reading a static map of components, ensuring rapid startup.
+                // Use pre-compiled JSR330 metadata for rapid startup.
                 new SpaceModule(space, BeanScanning.INDEX),
-                // Binds the Maven Log instance so injected services can perform plugin logging.
+                // Bind Maven Log and configuration.
                 new FacepalmLogModule(getLog()),
-                // Binds the immutable configuration into the Guice context to be available for injection.
                 new FacepalmConfigModule(effectiveConfig)
             )
         );
 
-        // Maven (Plexus/Sisu) instantiates the Mojo before your custom Guice injector exists, preventing @Inject from recognizing your local modules.
-        // Manually bootstrapping the injector with @Parameter fields is necessary to bridge the gap between Maven's lifecycle and your engine's dependencies.
-
+        // Manual bootstrapping is needed because Maven instantiates the Mojo before the injector exists.
         final var runner = injector.getInstance(FacepalmRunner.class);
         final var config = injector.getInstance(FacepalmConfig.class);
         final var log = injector.getInstance(Log.class);

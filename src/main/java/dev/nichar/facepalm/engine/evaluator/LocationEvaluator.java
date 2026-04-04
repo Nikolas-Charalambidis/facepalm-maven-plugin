@@ -11,9 +11,8 @@ import dev.nichar.facepalm.engine.Finding;
 
 
 /**
- * Adjusts finding scores based on the file's location within the project structure.
- * It prioritizes secrets found in production-related paths (e.g., /src/main/resources)
- * while de-prioritizing findings in test or mock directories (e.g., /src/test/java).
+ * Adjusts finding scores based on the file's location within the project.
+ * Prioritizes secrets in production-related paths and de-prioritizes findings in test or mock directories.
  */
 @Named
 @Singleton
@@ -27,15 +26,13 @@ class LocationEvaluator implements FindingEvaluator {
         String path = context.getPath().toString().toLowerCase();
 
         final var conf = config.getEvaluators();
-        // Checks if the path contains keywords indicating production deployment (e.g., "prod", "main", "deploy").
+        // Increase score for secrets in production-bound paths.
         if (conf.getProdPathMarkers().stream().anyMatch(path::contains)) {
-            // Increases the score as secrets in production-bound code represent a critical security leak.
             finding.log("Production Path Marker", 20, 0);
         }
 
-        // Checks if the path contains keywords indicating testing or local development (e.g., "test", "mock", "example").
+        // Lower score for secrets in test or mock paths.
         if (conf.getTestPathMarkers().stream().anyMatch(path::contains)) {
-            // Lowers the score significantly because secrets in tests are often non-functional mock data.
             finding.log("Test/Mock Path Marker", -30, -20);
         }
     }

@@ -11,9 +11,6 @@ import lombok.NoArgsConstructor;
 
 /**
  * Configuration for defining or overriding secret detection patterns.
- *
- * @author Nikolas Charalambidis
- * @since 1.0.0
  */
 @Data
 @NoArgsConstructor
@@ -21,17 +18,12 @@ import lombok.NoArgsConstructor;
 public class PatternConfig {
 
     /**
-     * User-defined list of patterns used to detect secrets.
-     * If provided, these can either supplement or replace the built-in detection logic.
+     * User-defined list of patterns to supplement or replace built-in logic.
      */
     private List<SecretPattern> overrides;
 
     /**
-     * Resolves the active list of patterns for the scanning engine.
-     * If no overrides are provided via Mojo or CLI, it falls back to the internal
-     * pattern registry.
-     *
-     * @return A non-null list of {@link SecretPattern} instances.
+     * Returns the active list of detection patterns, falling back to defaults if none are provided.
      */
     public List<SecretPattern> getOverrides() {
         return overrides != null ? overrides : SecretPatternRegistry.DEFAULT_PATTERNS;

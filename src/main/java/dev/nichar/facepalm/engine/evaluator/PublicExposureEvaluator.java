@@ -12,9 +12,7 @@ import lombok.RequiredArgsConstructor;
 
 
 /**
- * Adjusts the risk score of findings based on whether the containing file is ignored by Git.
- * If a file is matched by a .gitignore rule, it is considered to have lower public exposure,
- * and its overall security priority is significantly reduced.
+ * Reduces the risk score if the file is ignored by Git, suggesting lower public exposure.
  */
 @Named
 @Singleton
@@ -25,9 +23,8 @@ class PublicExposureEvaluator implements FindingEvaluator {
 
     @Override
     public void evaluate(@Nonnull final Finding finding, @Nonnull final FileContext context) {
-        // Checks if the current file path matches any .gitignore patterns discovered in the project.
+        // Lower priority if the file matches .gitignore patterns.
         if (gitIgnoreService.isIgnored(context.getPath())) {
-            // Lowers the finding's priority score, because ignored files are less likely to be committed.
             finding.log("Recursive .gitignore Match (Low Exposure)", -40, 0);
         }
     }

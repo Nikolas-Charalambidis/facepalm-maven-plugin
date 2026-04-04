@@ -20,9 +20,8 @@ import dev.nichar.facepalm.pattern.SecretPattern;
 
 
 /**
- * Scans file content using pre-defined regular expressions to identify potential secrets.
- * It supports both single-line pattern matching for speed and multi-line regex for complex
- * structures like PEM certificates, using SHA-256 hashing to ensure finding uniqueness.
+ * Scans file content using regular expressions to identify potential secrets.
+ * Supports both single-line matching and multi-line blocks like PEM certificates.
  */
 @Named
 @Singleton
@@ -78,15 +77,7 @@ public class RegexSecretExtractor implements SecretExtractor {
     }
 
     /**
-     * Constructs a Finding object and adds it to the list if its unique hash hasn't been seen yet.
-     *
-     * @param findings The list of total findings for the current file.
-     * @param dedup Set of existing hashes to prevent duplicates.
-     * @param ctx The current file context.
-     * @param sp The specific pattern that triggered the match.
-     * @param value The extracted secret string.
-     * @param lineNum The 1-based line number where the secret begins.
-     * @param snippet A preview of the line for reporting purposes.
+     * Constructs and registers a finding if its unique hash hasn't been seen yet.
      */
     private void registerFinding(@Nonnull final List<Finding> findings,
                                  @Nonnull final Set<String> dedup,
@@ -115,9 +106,6 @@ public class RegexSecretExtractor implements SecretExtractor {
 
     /**
      * Generates an SHA-256 hex string to uniquely identify a finding.
-     *
-     * @param input The combined string of pattern name, value, and line number.
-     * @return A 64-character hex string, or the string's hashCode as a fallback.
      */
     private String hashString(@Nonnull final String input) {
         try {

@@ -18,8 +18,7 @@ import dev.nichar.facepalm.report.Reporter;
 
 
 /**
- * Orchestrates the full lifecycle of a Facepalm scan, from gitignore loading and scanning to reporting.
- * It manages component execution and determines if the Maven build should fail based on finding severity.
+ * Orchestrates the scan lifecycle from gitignore loading to reporting.
  */
 @Named
 @Singleton
@@ -45,12 +44,11 @@ public class FacepalmRunner {
     }
 
     /**
-     * Executes the end-to-end scanning workflow and evaluates results against configured failure conditions.
+     * Runs the end-to-end scanning workflow and evaluates results.
      *
-     * @param root The base directory path to start the scan.
-     * @param outputDir The directory where report artifacts should be saved.
-     * @param version The version string of the project being scanned.
-     * @throws Exception If any step in the scanning or reporting process fails.
+     * @param root Base directory to scan.
+     * @param outputDir Directory for report artifacts.
+     * @param version Project version being scanned.
      */
     public void run(@Nonnull final Path root,
                     @Nonnull final Path outputDir,
@@ -71,11 +69,7 @@ public class FacepalmRunner {
     }
 
     /**
-     * Analyzes finding counts and throws a MojoFailureException if the project exceeds allowed thresholds.
-     *
-     * @param errors The total count of critical findings.
-     * @param warnings The total count of warning-level findings.
-     * @throws MojoFailureException If the scan results violate the project's failure configuration.
+     * Fails the build if findings exceed configured thresholds.
      */
     private void checkFailureConditions(long errors, long warnings) throws MojoFailureException {
         final var scoring = context.getScoring();

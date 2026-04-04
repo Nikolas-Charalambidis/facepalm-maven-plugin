@@ -25,24 +25,18 @@ import java.nio.file.Paths;
 
 
 /**
- * Command-line interface entry point for executing Facepalm scans outside a Maven lifecycle.
- * This class bootstraps the Sisu/Guice container manually to provide the same dependency injection environment as the Maven plugin.
- *
- * @author Nikolas Charalambidis
- * @since 1.0.0
+ * CLI entry point for running Facepalm scans outside of Maven.
  */
 public class FacepalmCLI {
 
     /**
-     * Main entry point for the CLI application.
+     * Bootstraps the Guice container and executes a scan on the target directory.
      *
-     * @param args Command line arguments; args[0] is optionally the target directory to scan.
-     * @throws MojoFailureException If the scan identifies critical security findings.
-     * @throws MojoExecutionException If an unexpected error occurs during execution.
+     * @param args Command line arguments; args[0] is optionally the target directory.
      */
     public static void main(final String[] args) throws MojoFailureException, MojoExecutionException {
 
-        // Initializes the default configuration suite for the scanner engine and evaluators.
+        // Initialize default configuration.
         final var effectiveConfig = new FacepalmConfig(
             new EngineConfig(),
             new ScoringConfig(),
@@ -50,31 +44,24 @@ public class FacepalmCLI {
             new PostProcessorConfig(),
             new PatternConfig());
 
-        // Creates a Sisu ClassSpace to index classes and resources from the current ClassLoader.
-        // This enables the scanner to discover components like {@code @Named} evaluators within the plugin.
+        // Index classes and resources to discover components like {@code @Named} evaluators.
         final var space = new URLClassSpace(FacepalmCLI.class.getClassLoader());
 
-        // Initializes the Guice injector to orchestrate dependency injection.
+        // Initialize Guice for dependency injection.
         final var injector = Guice.createInjector(
-            // Wraps modules to enable Sisu's advanced wiring, such as automatic List aggregation.
             new WireModule(
-                // Scans the ClassSpace for @Named components to register them in the container.
-                // Uses CACHE to perform a runtime brute-force scan of the classpath for @Named components.
-                // This provides a "fail-safe" mode for IDE execution (e.g., IntelliJ/Eclipse).
-                // The reason is the Maven-generated index might be missing or out of sync with the compiled classes.
+                // Perform a runtime scan of the classpath for @Named components.
                 new SpaceModule(space, BeanScanning.CACHE),
-                // Bridges the Maven Log interface to a standard ConsoleLogger for CLI output so injected services can perform plugin logging.
+                // Bridge Maven Log to a ConsoleLogger for CLI output.
                 new FacepalmLogModule(
                     new DefaultLog(
                         new ConsoleLogger(Logger.LEVEL_DEBUG, "facepalm-cli"))),
-                // Binds the immutable configuration into the Guice context to be available for injection.
+                // Bind the configuration into the Guice context.
                 new FacepalmConfigModule(effectiveConfig)
             )
         );
 
-        // Maven (Plexus/Sisu) instantiates the Mojo before your custom Guice injector exists, preventing @Inject from recognizing your local modules.
-        // Manually bootstrapping the injector with @Parameter fields is necessary to bridge the gap between Maven's lifecycle and your engine's dependencies.
-
+        // Manually retrieve instances as the CLI environment lacks automatic injection.
         final var runner = injector.getInstance(FacepalmRunner.class);
         final var config = injector.getInstance(FacepalmConfig.class);
         final var log = injector.getInstance(Log.class);

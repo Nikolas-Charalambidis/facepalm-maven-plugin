@@ -60,7 +60,6 @@ public class FacepalmRunner {
         List<Finding> findings = engine.scan(root);
         ScanStatistics stats = engine.getStats();
         reporter.printLogs(stats, findings);
-        reporter.performReporting(findings, stats, root.toString(), version, outputDir);
 
         final var scoring = context.getScoring();
         long errors = findings.stream().filter(f -> f.getSeverity(scoring) == Severity.ERROR).count();

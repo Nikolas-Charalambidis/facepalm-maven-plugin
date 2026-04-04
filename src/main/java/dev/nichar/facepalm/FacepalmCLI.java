@@ -37,12 +37,13 @@ public class FacepalmCLI {
     public static void main(final String[] args) throws MojoFailureException, MojoExecutionException {
 
         // Initialize default configuration.
-        final var effectiveConfig = new FacepalmConfig(
-            new EngineConfig(),
-            new ScoringConfig(),
-            new EvaluatorConfig(),
-            new PostProcessorConfig(),
-            new PatternConfig());
+        final var engineConfig = new EngineConfig();
+        final var scoringConfig = new ScoringConfig();
+        final var evaluatorConfig = new EvaluatorConfig();
+        final var postProcessorConfig = new PostProcessorConfig();
+        final var patternConfig = new PatternConfig();
+
+        final var effectiveConfig = new FacepalmConfig(engineConfig, scoringConfig, evaluatorConfig, postProcessorConfig, patternConfig);
 
         // Index classes and resources to discover components like {@code @Named} evaluators.
         final var space = new URLClassSpace(FacepalmCLI.class.getClassLoader());

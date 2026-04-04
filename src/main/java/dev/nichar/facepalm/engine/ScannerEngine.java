@@ -67,7 +67,7 @@ public class ScannerEngine {
      */
     @Nonnull
     public List<Finding> scan(@Nonnull final Path root) throws InterruptedException, IOException {
-        // 1. Capture the config on the MAIN thread
+        // Capture the config on the MAIN thread
         final var currentConfig = context;
         final var engineConfig = currentConfig.getEngine();
 

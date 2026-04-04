@@ -15,6 +15,8 @@
         <maven.compiler.target>17</maven.compiler.target>
 
         <org.apache.maven.version>3.9.12</org.apache.maven.version>
+        <org.apache.maven.reporting-api.version>3.1.1</org.apache.maven.reporting-api.version>
+        <org.apache.maven.reporting-impl.version>3.2.0</org.apache.maven.reporting-impl.version>
         <org.apache.maven.plugin-tools.version>3.11.0</org.apache.maven.plugin-tools.version>
         <org.apache.maven.failsafe-plugin.version>3.2.5</org.apache.maven.failsafe-plugin.version>
         <org.apache.maven.resources-plugin.version>3.3.1</org.apache.maven.resources-plugin.version>
@@ -22,8 +24,11 @@
         <org.freemarker.version>2.3.32</org.freemarker.version>
         <com.fasterxml.jackson.version>2.21.2</com.fasterxml.jackson.version>
         <com.google.inject.guice.version>5.1.0</com.google.inject.guice.version>
+        <com.google.guava.version>33.5.0-jre</com.google.guava.version>
         <org.eclipse.sisu.version>0.9.0.M2</org.eclipse.sisu.version>
         <com.soebes.itf.version>0.13.1</com.soebes.itf.version>
+        <jakarta.annotation.version>3.0.0</jakarta.annotation.version>
+        <javax.inject.version>1</javax.inject.version>
     </properties>
 
     <dependencies>
@@ -34,6 +39,46 @@
             <version>${org.apache.maven.version}</version>
             <!-- Compile scope needed because plugin is also run via PSVM/CLI outside Maven runtime -->
             <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.maven.reporting</groupId>
+            <artifactId>maven-reporting-api</artifactId>
+            <version>${org.apache.maven.reporting-api.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven.reporting</groupId>
+            <artifactId>maven-reporting-impl</artifactId>
+            <version>${org.apache.maven.reporting-impl.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>org.eclipse.sisu.plexus</artifactId>
+                    <groupId>org.eclipse.sisu</groupId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.google.collections</groupId>
+                    <artifactId>google-collections</artifactId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>maven-artifact</artifactId>
+                    <groupId>org.apache.maven</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>maven-model</artifactId>
+                    <groupId>org.apache.maven</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>maven-plugin-api</artifactId>
+                    <groupId>org.apache.maven</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <!-- Include a specific version as a replacement to the provided Guava version to mitigate a missing class exception. -->
+            <!-- Caused by: java.lang.ClassNotFoundException: com.google.common.base.Stopwatch -->
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${com.google.guava.version}</version>
         </dependency>
 
         <!-- Provides @Mojo and @Parameter annotations for goals and provides metadata to generate the plugin.xml descriptor. -->
@@ -70,9 +115,17 @@
 
         <!-- Standard JSR-330 annotations for dependency injection. -->
         <dependency>
+            <!-- TODO: Explain why javax and not jakarta.. it thorws NPE as injection is ignored with jakarta, so javax must be used -->
             <groupId>javax.inject</groupId>
             <artifactId>javax.inject</artifactId>
-            <version>1</version>
+            <version>${javax.inject.version}</version>
+        </dependency>
+
+        <!-- Standard JSR-330 annotations for nullable annotations. -->
+        <dependency>
+            <groupId>jakarta.annotation</groupId>
+            <artifactId>jakarta.annotation-api</artifactId>
+            <version>${jakarta.annotation.version}</version>
         </dependency>
 
         <!-- Connects internal logic to Maven's Sisu container. -->
@@ -89,6 +142,12 @@
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
             <version>${com.google.inject.guice.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>guava</artifactId>
+                    <groupId>com.google.guava</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- Runs full Maven integration tests inside JUnit 5. -->

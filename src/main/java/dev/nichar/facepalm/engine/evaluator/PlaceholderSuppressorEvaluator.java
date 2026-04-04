@@ -1,6 +1,6 @@
 package dev.nichar.facepalm.engine.evaluator;
 
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;

@@ -2,7 +2,7 @@ package dev.nichar.facepalm.engine.postprocessor;
 
 import java.util.List;
 
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;

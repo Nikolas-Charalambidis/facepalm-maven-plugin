@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;

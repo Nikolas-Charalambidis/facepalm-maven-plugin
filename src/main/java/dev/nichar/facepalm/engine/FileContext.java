@@ -3,7 +3,7 @@ package dev.nichar.facepalm.engine;
 import java.nio.file.Path;
 import java.util.List;
 
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 
 import dev.nichar.facepalm.engine.evaluator.FindingEvaluator;
 import dev.nichar.facepalm.engine.extractor.SecretExtractor;

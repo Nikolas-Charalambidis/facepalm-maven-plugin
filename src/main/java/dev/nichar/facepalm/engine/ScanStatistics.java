@@ -4,7 +4,7 @@ import java.nio.file.Path;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.LongAdder;
 
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 
 import lombok.Data;
 

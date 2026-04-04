@@ -13,7 +13,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.reporting.AbstractMavenReport;
 import org.apache.maven.reporting.MavenReportException;
 
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 
 @Mojo(name = "report", defaultPhase = LifecyclePhase.SITE)
 public class FacepalmReportMojo extends AbstractMavenReport {

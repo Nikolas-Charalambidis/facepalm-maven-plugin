@@ -1,10 +1,11 @@
 package dev.nichar.facepalm.engine;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -13,7 +14,10 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugin.logging.SystemStreamLog;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.nichar.facepalm.FacepalmConfig;
+import dev.nichar.facepalm.config.ScoringConfig;
+import dev.nichar.facepalm.report.FindingReport;
 import dev.nichar.facepalm.report.Reporter;
 
 
@@ -44,7 +48,7 @@ public class FacepalmRunner {
     }
 
     /**
-     * Runs the end-to-end scanning workflow and evaluates results.
+     * Runs the end-to-end scanning workflow, saves results to JSON, and evaluates build failure.
      *
      * @param root Base directory to scan.
      * @param outputDir Directory for report artifacts.
@@ -59,12 +63,47 @@ public class FacepalmRunner {
         gitIgnoreService.loadAllGitIgnores(root);
         List<Finding> findings = engine.scan(root);
         ScanStatistics stats = engine.getStats();
+
         reporter.printLogs(stats, findings);
 
+        // Save the findings to a machine-readable format for site generation.
+        final var resultsFile = new File(outputDir.toFile(), "facepalm-findings.json");
+        saveFindingsToJson(findings, resultsFile);
+
         final var scoring = context.getScoring();
-        long errors = findings.stream().filter(f -> f.getSeverity(scoring) == Severity.ERROR).count();
-        long warnings = findings.stream().filter(f -> f.getSeverity(scoring) == Severity.WARNING).count();
+        final long errors = findings.stream().filter(f -> f.getSeverity(scoring) == Severity.ERROR).count();
+        final long warnings = findings.stream().filter(f -> f.getSeverity(scoring) == Severity.WARNING).count();
         checkFailureConditions(errors, warnings);
+    }
+
+    /**
+     * Serializes the scan findings to a JSON file for later consumption by the reporting phase.
+     */
+    private void saveFindingsToJson(List<Finding> findings, File outputFile) throws Exception {
+        if (!outputFile.getParentFile().exists()) {
+            outputFile.getParentFile().mkdirs();
+        }
+
+        final var findingsDto = findings.stream()
+            .map(finding -> mapToDto(finding, context.getScoring()))
+            .toList();
+
+        final var mapper = new ObjectMapper();
+        mapper.writerWithDefaultPrettyPrinter().writeValue(outputFile, findingsDto);
+    }
+
+    public FindingReport mapToDto(Finding finding, ScoringConfig config) {
+        return FindingReport.builder()
+            .patternName(finding.getPatternName())
+            .fileAbsolutePath(finding.getContext().getPath().toAbsolutePath().toString())
+            .lineNumber(finding.getLineNumber())
+            .maskedSecret(finding.getMaskedSecret())
+            .contextSnippet(finding.getContextSnippet())
+            .finalScore(finding.getNumericScore())
+            .finalSeverity(finding.getSeverity(config).name())
+            .riskScore(finding.getRiskScore())
+            .confidenceScore(finding.getConfidenceScore())
+            .build();
     }
 
     /**

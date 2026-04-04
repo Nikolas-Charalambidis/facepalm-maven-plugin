@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.stream.Collectors;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;

@@ -1,7 +1,7 @@
 package dev.nichar.facepalm.engine.evaluator;
 
 
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 
 import dev.nichar.facepalm.engine.FileContext;
 import dev.nichar.facepalm.engine.Finding;

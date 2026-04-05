@@ -24,7 +24,11 @@ class FacepalmMojoIT {
      */
     @MavenTest
     @MavenGoal("verify")
-    @MavenGoal("facepalm:report") // TODO: Explain
+    // Use "facepalm:report" specifically instead of "site" or "report" because:
+    // 1. "site" is a full lifecycle that is too slow for integration tests.
+    // 2. "report" is the goal name defined in FacepalmReportMojo.
+    // 3. Prefixing with "facepalm:" ensures we target our plugin's goal directly.
+    @MavenGoal("facepalm:report")
     @MavenVerbose
     void clean_project(final MavenExecutionResult result) {
         // Verifies the build finished without errors and the scanner log matches expected success.
@@ -45,6 +49,10 @@ class FacepalmMojoIT {
      */
     @MavenTest
     @MavenGoal("verify")
+    // Use "facepalm:report" specifically instead of "site" or "report" because:
+    // 1. "site" is a full lifecycle that is too slow for integration tests.
+    // 2. "report" is the goal name defined in FacepalmReportMojo.
+    // 3. Prefixing with "facepalm:" ensures we target our plugin's goal directly.
     @MavenGoal("facepalm:report")
     @MavenVerbose
     void dirty_project(final MavenExecutionResult result) {
@@ -71,6 +79,10 @@ class FacepalmMojoIT {
      */
     @MavenTest
     @MavenGoal("verify")
+    // Use "facepalm:report" specifically instead of "site" or "report" because:
+    // 1. "site" is a full lifecycle that is too slow for integration tests.
+    // 2. "report" is the goal name defined in FacepalmReportMojo.
+    // 3. Prefixing with "facepalm:" ensures we target our plugin's goal directly.
     @MavenGoal("facepalm:report")
     @MavenVerbose
     void dirty_project_fail_on_warnings(final MavenExecutionResult result) {

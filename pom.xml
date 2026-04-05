@@ -115,7 +115,8 @@
 
         <!-- Standard JSR-330 annotations for dependency injection. -->
         <dependency>
-            <!-- TODO: Explain why javax and not jakarta.. it thorws NPE as injection is ignored with jakarta, so javax must be used -->
+            <!-- The Maven ecosystem (specifically Plexus/Sisu used for Mojos) is built on JSR-330 'javax.inject'. -->
+            <!-- Switching to the newer 'jakarta.inject' (v2+) will cause the container to ignore these annotations. -->
             <groupId>javax.inject</groupId>
             <artifactId>javax.inject</artifactId>
             <version>${javax.inject.version}</version>

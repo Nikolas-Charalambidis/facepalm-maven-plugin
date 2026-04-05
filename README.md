@@ -93,8 +93,9 @@ ___
 ## Documentation
 
 - [Configuration](docs/configuration.md) - Parameters, defaults, and examples.
-- [Detection Patterns](docs/patterns.md) - What is detected and how to extend.
 - [Git Hooks](docs/git-hooks.md) - Pre-commit and pre-push setup.
+- [Detection Patterns](docs/patterns.md) - What is detected and how to extend.
+- [Reporting](docs/reporting.md) - How to generate reports.
 - [FAQ](docs/faq.md) - False positives, performance, and more.
 
 ___

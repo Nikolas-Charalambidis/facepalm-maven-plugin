@@ -68,7 +68,7 @@ public class Reporter {
     /**
      * Executes the full reporting workflow, including console logging and file generation.
      */
-    @SuppressWarnings("unused") // TODO: Reporting.
+    @SuppressWarnings("unused") // TODO: SARIF + HTML reporting.
     public void performReporting(List<Finding> findings,
                                  ScanStatistics stats,
                                  String rootPath,

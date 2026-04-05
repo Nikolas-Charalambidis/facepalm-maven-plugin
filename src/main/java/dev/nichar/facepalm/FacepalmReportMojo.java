@@ -1,13 +1,13 @@
 package dev.nichar.facepalm;
 
 import java.io.File;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.nichar.facepalm.report.FindingReport;
 
-import org.apache.maven.doxia.sink.Sink;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.reporting.AbstractMavenReport;
@@ -15,28 +15,47 @@ import org.apache.maven.reporting.MavenReportException;
 
 import jakarta.annotation.Nonnull;
 
+/**
+ * Maven Site reporting Mojo that generates an integrated security scan report.
+ * Consumes the JSON findings produced during the 'scan' phase.
+ */
 @Mojo(name = "report", defaultPhase = LifecyclePhase.SITE)
 public class FacepalmReportMojo extends AbstractMavenReport {
 
+    /**
+     * Unique identifier for the report in the Maven Site navigation.
+     */
     @Override
     public String getOutputName() {
         return "facepalm-report";
     }
 
+    /**
+     * Localized name of the report for the Site index.
+     */
     @Override
     public String getName(@Nonnull final Locale locale) {
         return "Facepalm Report";
     }
 
+    /**
+     * Localized description of the report's purpose.
+     */
     @Override
     public String getDescription(@Nonnull final Locale locale) {
         return "Scan results for leaked secrets.";
     }
 
+    /**
+     * Core execution logic for rendering the Maven Site report.
+     * Deserializes findings from the target directory and transforms them into Doxia Sink elements.
+     */
     @Override
     protected void executeReport(Locale locale) throws MavenReportException {
         // Output directory is injected via Maven: @Parameter(defaultValue = "${project.reporting.outputDirectory}", readonly = true)
-        getLog().info("### " + outputDirectory.getAbsolutePath().toString());
+        getLog().debug("Facepalm report generation output directory: " + outputDirectory.getAbsolutePath());
+        
+        // Resolve findings relative to the reporting output directory (usually target/site)
         File resultsFile = outputDirectory.toPath().resolve("..").resolve("facepalm-findings.json").normalize().toFile();
 
         if (!resultsFile.exists()) {
@@ -49,7 +68,7 @@ public class FacepalmReportMojo extends AbstractMavenReport {
         List<FindingReport> findings;
         try {
             final var mapper = new ObjectMapper();
-            // Read the JSON back into a List of Finding objects
+            // Deserializes findings from the machine-readable JSON format.
             findings = mapper.readValue(
                 resultsFile,
                 mapper.getTypeFactory().constructCollectionType(List.class, FindingReport.class)
@@ -58,14 +77,20 @@ public class FacepalmReportMojo extends AbstractMavenReport {
             throw new MavenReportException("Failed to read facepalm-results.json. Is the file corrupted?", e);
         }
 
-        // Render the HTML using the Doxia Sink
+        // Generate the HTML content using Maven's Doxia Sink API.
         renderReport(findings);
     }
 
+    /**
+     * Translates a list of findings into structured HTML via the Doxia Sink API.
+     */
     private void renderReport(List<FindingReport> findings) {
-        Sink sink = getSink();
+        final var sink = getSink();
 
-        // 1. Document Setup
+        // Sort the findings.
+        findings.sort(Comparator.comparing(FindingReport::getFinalScore, Comparator.reverseOrder()));
+
+        // Document Head Section
         sink.head();
         sink.title();
         sink.text("Facepalm Security Report");
@@ -74,7 +99,7 @@ public class FacepalmReportMojo extends AbstractMavenReport {
 
         sink.body();
 
-        // 2. Header Section
+        // Page Header
         sink.section1();
         sink.sectionTitle1();
         sink.text("Facepalm Security Scan Results");
@@ -84,9 +109,9 @@ public class FacepalmReportMojo extends AbstractMavenReport {
         sink.text("The following potential secrets and security risks were identified during the verify phase.");
         sink.paragraph_();
 
-        // 3. Summary Statistics
-        long errors = findings.stream().filter(f -> "ERROR".equals(f.getFinalSeverity())).count();
-        long warnings = findings.stream().filter(f -> "WARNING".equals(f.getFinalSeverity())).count();
+        // High-level Summary Breakdown
+        final long errors = findings.stream().filter(fr -> "ERROR".equals(fr.getFinalSeverity())).count();
+        final long warnings = findings.stream().filter(fr -> "WARNING".equals(fr.getFinalSeverity())).count();
 
         sink.list();
         sink.listItem();
@@ -101,7 +126,7 @@ public class FacepalmReportMojo extends AbstractMavenReport {
 
         sink.horizontalRule();
 
-        // 4. Findings Table
+        // Detailed Findings Tabular Data
         if (findings.isEmpty()) {
             sink.paragraph();
             sink.italic();
@@ -111,19 +136,23 @@ public class FacepalmReportMojo extends AbstractMavenReport {
         } else {
             sink.table();
 
-            // Table Header
+            // Render Table Header
             sink.tableRow();
             sink.tableHeaderCell(); sink.text("Severity"); sink.tableHeaderCell_();
-            sink.tableHeaderCell(); sink.text("Score"); sink.tableHeaderCell_();
+            sink.tableHeaderCell(); sink.text("Total Score"); sink.tableHeaderCell_();
+            sink.tableHeaderCell(); sink.text("Risk Score"); sink.tableHeaderCell_();
+            sink.tableHeaderCell(); sink.text("Confidence Score"); sink.tableHeaderCell_();
             sink.tableHeaderCell(); sink.text("Location"); sink.tableHeaderCell_();
             sink.tableHeaderCell(); sink.text("Pattern / Secret"); sink.tableHeaderCell_();
             sink.tableRow_();
 
-            // Table Rows
+            // Populate Table Rows
+
+
             for (FindingReport finding : findings) {
                 sink.tableRow();
 
-                // Severity Column
+                // Severity Column with High-risk emphasis
                 sink.tableCell();
                 if ("ERROR".equals(finding.getFinalSeverity())) {
                     sink.bold(); sink.text("HIGH"); sink.bold_();
@@ -132,19 +161,31 @@ public class FacepalmReportMojo extends AbstractMavenReport {
                 }
                 sink.tableCell_();
 
-                // Score Column
+                // Final Score Column
                 sink.tableCell();
+                sink.bold();
                 sink.text(String.format("%.1f", finding.getFinalScore()));
+                sink.bold_();
                 sink.tableCell_();
 
-                // Location Column (File + Line)
+                // Risk Score Column
+                sink.tableCell();
+                sink.text(String.valueOf(finding.getRiskScore()));
+                sink.tableCell_();
+
+                // Confidence Score Column
+                sink.tableCell();
+                sink.text(String.valueOf(finding.getConfidenceScore()));
+                sink.tableCell_();
+
+                // File Path and Line Number
                 sink.tableCell();
                 sink.italic();
                 sink.text(finding.getFileAbsolutePath() + " (Line: " + finding.getLineNumber() + ")");
                 sink.italic_();
                 sink.tableCell_();
 
-                // Pattern and Masked Secret
+                // Masked Secret and Pattern Identification
                 sink.tableCell();
                 sink.text(finding.getPatternName() + ": ");
                 sink.monospaced();
@@ -163,8 +204,9 @@ public class FacepalmReportMojo extends AbstractMavenReport {
         sink.flush();
         sink.close();
     }
+    
     /**
-     * Renders a fallback report if the JSON data is missing.
+     * Renders a placeholder message if the scanner has not been executed yet.
      */
     private void renderEmptyReport() {
         org.apache.maven.doxia.sink.Sink sink = getSink();

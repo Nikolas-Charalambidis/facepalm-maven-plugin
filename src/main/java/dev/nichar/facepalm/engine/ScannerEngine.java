@@ -30,8 +30,8 @@ import lombok.Getter;
 
 
 /**
- * Concurrent engine for file discovery, filtering, and automated secret extraction.
- * Orchestrates parallel processing of candidate files through the detection pipeline.
+ * Concurrent engine for file discovery and secret extraction.
+ * Orchestrates the parallel execution of the scanning pipeline across the project tree.
  */
 @Named
 @Singleton
@@ -60,18 +60,19 @@ public class ScannerEngine {
     }
 
     /**
-     * Recursively traverses the root directory and executes parallel scans on qualified files.
+     * Traverses the project root and executes parallel scans on qualified files.
      *
-     * @param root Root directory to scan.
+     * @param root Project directory to scan.
      * @return List of identified findings.
      */
     @Nonnull
     public List<Finding> scan(@Nonnull final Path root) throws InterruptedException, IOException {
-        // Capture the config on the MAIN thread
+        // Capture configuration on the main thread for thread safety.
         final var currentConfig = context;
         final var engineConfig = currentConfig.getEngine();
 
         final List<Callable<List<Finding>>> tasks = new ArrayList<>();
+        // Walk the filesystem and identify candidate files.
         try (final var paths = Files.walk(root)) {
             final var discoveredPaths = paths.filter(Files::isRegularFile).toList();
             log.info("Discovered " + discoveredPaths.size() + " files...");
@@ -92,7 +93,7 @@ public class ScannerEngine {
 
         log.info("Starting scan of " + tasks.size() + " files...");
 
-        // Process files in parallel.
+        // Initialize thread pool for parallel processing.
         final var executor = Executors.newFixedThreadPool(engineConfig.getThreads());
         try {
             final CompletionService<List<Finding>> service = new ExecutorCompletionService<>(executor);
@@ -110,12 +111,13 @@ public class ScannerEngine {
             }
             return allFindings;
         } finally {
+            // Shutdown the executor and await completion.
             executor.shutdown();
         }
     }
 
     /**
-     * Checks if a file should be scanned based on size, extension, and exclusion rules.
+     * Checks if a file qualifies for scanning based on size, type, and exclusion rules.
      */
     private boolean shouldScan(@Nonnull final Path path, @Nonnull final ScanStatistics stats) {
         final var engineConfig = context.getEngine();
@@ -131,7 +133,7 @@ public class ScannerEngine {
         }
 
         final var fileName = path.getFileName().toString();
-        // Filters out images, zip files, etc.
+        // Skip binary and non-text assets to reduce noise.
         if (fileName.toLowerCase().matches(engineConfig.getSkipBinaryRegex())) {
             if (engineConfig.isShowSkipped()) {
                 log.debug("Skipping binary file: " + path);
@@ -141,7 +143,7 @@ public class ScannerEngine {
         }
 
         try {
-            // Skips large files to avoid OOM.
+            // Skip large files to prevent OOM during regex matching.
             if (Files.size(path) > engineConfig.getMaxFileSizeBytes()) {
                 if (engineConfig.isShowSkipped()) {
                     log.debug("Skipping large file: " + path);
@@ -158,7 +160,7 @@ public class ScannerEngine {
     }
 
     /**
-     * Processes a single file through the extraction, evaluation, and post-processing pipeline.
+     * Executes the extraction, evaluation, and post-processing pipeline for a single file.
      */
     @Nonnull
     private List<Finding> processFile(@Nonnull final Path path) {
@@ -168,25 +170,25 @@ public class ScannerEngine {
             log.debug("Processing file: " + path);
         }
         try {
-            // Loads file into memory; size limit in shouldScan() protects 
+            // Load file into memory. Protected by size limits in shouldScan().
             final var content = Files.readString(path);
-            // Creates a snapshot of the file for plugins, splitting by line for easy reporting
+            // Initialize file context for the scanning pipeline.
             final var context = new FileContext(path, content, Arrays.asList(content.split("\\R")));
             final List<Finding> fileFindings = new ArrayList<>();
 
-            // Run regex/entropy extractors.
+            // Execute regex-based secret extraction.
             for (final var extractor : extractors) {
                 fileFindings.addAll(extractor.extract(context));
             }
 
-            // Decorate findings with severity or false-positive checks
+            // Refine findings using heuristic evaluators.
             for (final var finding : fileFindings) {
                 for (final var evaluator : evaluators) {
                     evaluator.evaluate(finding, context);
                 }
             }
 
-            // Global file-level modifications (e.g. deduplication).
+            // Perform final file-level adjustments and deduplication.
             for (final var processor : fileProcessors) {
                 processor.process(fileFindings, context);
             }

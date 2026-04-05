@@ -11,7 +11,8 @@ import lombok.EqualsAndHashCode;
 
 
 /**
- * Represents a discovered secret and its associated risk/confidence metadata.
+ * Represents a discovered secret and its associated threat metadata.
+ * Tracks risk, confidence, and scoring history throughout the evaluation pipeline.
  */
 @Data
 @Builder
@@ -20,6 +21,9 @@ public class Finding {
 
     private final String patternName;
 
+    /**
+     * Unique hash for file-level deduplication.
+     */
     @EqualsAndHashCode.Include
     private final String deduplicationHash;
 
@@ -35,11 +39,14 @@ public class Finding {
 
     private int confidenceScore;
 
+    /**
+     * Historical log of scoring adjustments.
+     */
     @Builder.Default
     private final List<String> scoreHistory = new ArrayList<>();
 
     /**
-     * Updates the risk and confidence scores and records the rule responsible for the change.
+     * Updates threat scores and records the rule responsible for the adjustment.
      */
     public void log(String rule, int rDelta, int cDelta) {
         riskScore = Math.max(0, Math.min(100, riskScore + rDelta));
@@ -48,7 +55,7 @@ public class Finding {
     }
 
     /**
-     * Determines the severity of the finding based on current scores and threshold configuration.
+     * Resolves the finding's severity based on configured threat thresholds.
      */
     public Severity getSeverity(ScoringConfig config) {
         double score = getNumericScore();
@@ -62,14 +69,14 @@ public class Finding {
     }
 
     /**
-     * Calculates the final numeric score using a weighted quadratic strategy.
+     * Calculates the composite threat score using the active scoring strategy.
      */
     public double getNumericScore() {
         return ScoringStrategy.WEIGHTED_QUADRATIC.calculate(riskScore, confidenceScore);
     }
 
     /**
-     * Returns a partially masked version of the secret for safe logging.
+     * Returns a masked version of the secret for safe logging and reporting.
      */
     public String getMaskedSecret() {
         return secretValue.length() <= 8 ? "****" : secretValue.substring(0, 4) + "..." + secretValue.substring(secretValue.length() - 4);

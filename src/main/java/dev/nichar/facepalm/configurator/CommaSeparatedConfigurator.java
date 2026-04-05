@@ -12,14 +12,14 @@ import org.codehaus.plexus.configuration.PlexusConfiguration;
 
 
 /**
- * Custom Maven configurator that enables injecting comma-separated strings into {@link java.util.Set} parameters.
- * It registers a specialized converter to handle flat XML values and CLI properties as unique, trimmed sets.
+ * Custom Maven configurator for mapping comma-separated strings to {@link java.util.Set} parameters.
+ * Enables flat XML values and CLI properties to be injected as unique, trimmed sets.
  */
 @Component(role = ComponentConfigurator.class, hint = CommaSeparatedConfigurator.COMMA_SEPARATED_CONFIGURATOR)
 public class CommaSeparatedConfigurator extends BasicComponentConfigurator {
 
     /**
-     * A unique string identifier used to link this custom configuration logic to a specific Mojo.
+     * Unique hint for linking this configurator to Maven Mojos.
      */
     public static final String COMMA_SEPARATED_CONFIGURATOR = "comma-separated-configurator";
 
@@ -30,10 +30,10 @@ public class CommaSeparatedConfigurator extends BasicComponentConfigurator {
                                    final ClassRealm realm,
                                    final ConfigurationListener listener) throws ComponentConfigurationException {
 
-        // Register the converter that handles comma-separated strings for Set fields.
+        // Register the specialized converter for Set-based parameters.
         converterLookup.registerConverter(new CommaSeparatedSetConverter());
 
-        // Delegate to the base class to perform the actual injection using the updated lookup table
+        // Delegate component configuration to the base Plexus logic.
         super.configureComponent(component, configuration, evaluator, realm, listener);
     }
 }

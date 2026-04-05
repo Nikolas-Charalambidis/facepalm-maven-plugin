@@ -11,7 +11,8 @@ import dev.nichar.facepalm.engine.Finding;
 
 
 /**
- * Analyzes surrounding lines for keywords like "mock" or "prod" to identify the secret's environment.
+ * Analyzes surrounding code for environment-specific keywords.
+ * Identifies markers like "mock" or "prod" to refine threat confidence.
  */
 @Named
 @Singleton
@@ -23,17 +24,17 @@ class SurroundingContextEvaluator implements FindingEvaluator {
     @Override
     public void evaluate(@Nonnull final Finding finding, @Nonnull final FileContext context) {
         final int idx = finding.getLineNumber() - 1;
-        // Search a window of neighboring lines.
+        // Analyze a window of neighboring lines for environmental clues.
         final var chunk = (context.getLineOrEmpty(idx - 1) + " " +
             context.getLineOrEmpty(idx) + " " +
             context.getLineOrEmpty(idx + 1)).toLowerCase();
 
         final var conf = config.getEvaluators();
-        // Lower score if mock or test keywords are found nearby.
+        // Reduce confidence if mock or test keywords are found in the immediate vicinity.
         if (conf.getMockContextMarkers().stream().anyMatch(chunk::contains)) {
             finding.log("Mock Context Keywords Found", 0, -40);
         }
-        // Increase score if production keywords are found nearby.
+        // Increase risk if production-specific markers are present.
         if (conf.getProdContextMarkers().stream().anyMatch(chunk::contains)) {
             finding.log("Production Context Keywords Found", 20, 0);
         }

@@ -6,8 +6,8 @@ import lombok.extern.jackson.Jacksonized;
 
 
 /**
- * Data Transfer Object (DTO) for findings, used to serialize scan results to JSON
- * and then deserialize them for the reporting phase.
+ * Data Transfer Object for scan findings.
+ * Used to serialize discovery results to JSON for the reporting phase.
  */
 @Data
 @Builder
@@ -15,47 +15,47 @@ import lombok.extern.jackson.Jacksonized;
 public class FindingReport {
 
     /**
-     * The name of the pattern that identified this potential secret.
+     * Name of the pattern that identified the potential secret.
      */
     private String patternName;
 
     /**
-     * Absolute filesystem path to the file containing the finding.
+     * Absolute filesystem path to the source file.
      */
     private String fileAbsolutePath;
 
     /**
-     * 1-based line number where the finding was located.
+     * 1-based line number of the detection.
      */
     private int lineNumber;
 
     /**
-     * A partially obfuscated version of the secret for safe display in reports.
+     * Partially obfuscated secret for safe display.
      */
     private String maskedSecret;
 
     /**
-     * A snippet of the surrounding code to provide context for the developer.
+     * Snippet of surrounding code for context.
      */
     private String contextSnippet;
 
     /**
-     * The final threat score calculated by the engine's scoring strategy.
+     * Composite threat score calculated by the engine.
      */
     private double finalScore;
 
     /**
-     * The human-readable severity level (e.g., ERROR, WARNING).
+     * Resolved severity level (e.g., ERROR, WARNING).
      */
     private String finalSeverity;
 
     /**
-     * The raw risk score before confidence weighting.
+     * Raw risk score before weighting.
      */
     private int riskScore;
 
     /**
-     * The confidence level of the detection.
+     * Confidence level of the detection.
      */
     private int confidenceScore;
 }

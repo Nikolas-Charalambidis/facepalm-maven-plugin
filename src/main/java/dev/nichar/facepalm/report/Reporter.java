@@ -37,7 +37,8 @@ import freemarker.template.TemplateExceptionHandler;
 
 
 /**
- * Handles the generation of HTML and SARIF reports, and logs scan results to the console.
+ * Handles the generation of security reports and console logging.
+ * Supports HTML and SARIF formats for integration with CI/CD and developer workflows.
  */
 @Named
 @Singleton
@@ -66,7 +67,7 @@ public class Reporter {
     }
 
     /**
-     * Executes the full reporting workflow, including console logging and file generation.
+     * Executes the full reporting pipeline, including console logs and file generation.
      */
     @SuppressWarnings("unused") // TODO: SARIF + HTML reporting.
     public void performReporting(List<Finding> findings,
@@ -80,7 +81,7 @@ public class Reporter {
     }
 
     /**
-     * Generates an HTML report using a Freemarker template.
+     * Generates an HTML report using Freemarker templates.
      */
     public void generateHtml(ScanReport report, Path outputPath) throws Exception {
         Template temp = cfg.getTemplate("report.html.ftl");
@@ -97,7 +98,7 @@ public class Reporter {
     }
 
     /**
-     * Generates a SARIF report for integration with security tools and CI/CD pipelines.
+     * Generates a SARIF report for integration with standard security analysis tools.
      */
     public void generateSarif(ScanReport report, File outputFile) throws Exception {
         ObjectMapper mapper = new ObjectMapper();
@@ -137,12 +138,13 @@ public class Reporter {
     }
 
     /**
-     * Aggregates raw findings and statistics into a structured {@link ScanReport}.
+     * Aggregates raw discovery findings into a structured report model.
      */
     public ScanReport buildReport(List<Finding> findings,
                                   ScanStatistics stats,
                                   String rootPath,
                                   String version) {
+        // Group findings by unique secret fingerprints for deduplicated reporting.
         Map<String, List<Finding>> grouped = findings.stream()
             .collect(Collectors.groupingBy(f ->
                 Base64.getEncoder().encodeToString((f.getPatternName() + ":" + f.getMaskedSecret()).getBytes())
@@ -155,6 +157,7 @@ public class Reporter {
                 List<Finding> occs = entry.getValue();
                 Finding primary = occs.get(0);
 
+                // Initialize metadata for the primary detection pattern.
                 ruleDict.putIfAbsent(
                     primary.getPatternName(), ScanReport.RuleDefinition.builder()
                         .id(primary.getPatternName())
@@ -179,7 +182,9 @@ public class Reporter {
                         .snippet(f.getContextSnippet())
                         .build()).collect(Collectors.toList()))
                     .build();
-            }).sorted(Comparator.comparing(ScanReport.UniqueLeak::getAggregateScore).reversed())
+            })
+            // Sort discoveries by descending threat score.
+            .sorted(Comparator.comparing(ScanReport.UniqueLeak::getAggregateScore).reversed())
             .collect(Collectors.toList());
 
         return ScanReport.builder()
@@ -200,6 +205,9 @@ public class Reporter {
             .build();
     }
 
+    /**
+     * Logs discovery findings and scan statistics to the Maven console.
+     */
     public void printLogs(ScanStatistics stats, List<Finding> findings) {
         final var scoringConfig = context.getScoring();
 
@@ -211,28 +219,20 @@ public class Reporter {
                 .forEach(f -> {
                     Severity sev = f.getSeverity(scoringConfig);
 
-                    // 2. Use the log level that matches the finding severity for proper coloring
                     String message = String.format(
                         "[%s] Score: %.1f (R:%d/C:%d) - %s",
                         f.getPatternName(), f.getNumericScore(),
                         f.getRiskScore(), f.getConfidenceScore(),
                         f.getSeverity(scoringConfig).getIcon());
 
+                    // Emit high-risk findings at the error level for visibility.
                     if (sev == Severity.ERROR) {
                         log.error(message);
                     } else {
                         log.warn(message);
                     }
 
-                    // Indented info details following the header
                     log.info("  Location: " + f.getContext().getPath() + ":" + f.getLineNumber());
-
-                    //String snippet = f.getContextSnippet().trim();
-                    //log.info("  Context : " + (snippet.length() > 80
-                    //    ? snippet.substring(0, 77) + "..."
-                    //    : snippet));
-
-                    // Empty line between findings for readability, similar to test run logs
                     log.info("");
                 });
         }
@@ -241,6 +241,7 @@ public class Reporter {
         long errors = findings.stream().filter(f -> f.getSeverity(scoringConfig) == Severity.ERROR).count();
         long warnings = findings.stream().filter(f -> f.getSeverity(scoringConfig) == Severity.WARNING).count();
 
+        // Emit summary statistics if verbose detail is enabled.
         if (scoringConfig.isShowDetails()) {
             log.info(SEPARATOR);
 
@@ -261,7 +262,6 @@ public class Reporter {
 
         log.info(SEPARATOR);
 
-        // Summary message based on severity
         String statusMessage;
         if (errors > 0) {
             statusMessage = "High-risk issues detected! Action required.";
@@ -273,7 +273,7 @@ public class Reporter {
             statusMessage = "No secrets or sensitive patterns detected. Your secrets are safe.";
         }
 
-        // Determine scan result text
+        // Resolve scan status based on meeting configured thresholds.
         final String scanResult;
         if (errors > 0) {
             scanResult = "FAILURE";
@@ -283,14 +283,11 @@ public class Reporter {
             scanResult = "SUCCESS";
         }
 
-        // Determine status text based on findings
-
         log.info("SCAN RESULT : " + scanResult);
         log.info(SEPARATOR);
         log.info(statusMessage);
     }
 
-    // Helper for Maven-style duration (e.g., 1.234 s)
     private String formatDuration(long millis) {
         return String.format("%.3f s", millis / 1000.0);
     }

@@ -25,18 +25,18 @@ import java.nio.file.Paths;
 
 
 /**
- * CLI entry point for running Facepalm scans outside of Maven.
+ * Command-line interface for running Facepalm scans outside of the Maven lifecycle.
  */
 public class FacepalmCLI {
 
     /**
-     * Bootstraps the Guice container and executes a scan on the target directory.
+     * Bootstraps the Guice container and executes a scan on the specified directory.
      *
-     * @param args Command line arguments; args[0] is optionally the target directory.
+     * @param args Command-line arguments. args[0] is the target directory (default: current).
      */
     public static void main(final String[] args) throws MojoFailureException, MojoExecutionException {
 
-        // Initialize default configuration.
+        // Assemble baseline configuration with default settings.
         final var engineConfig = new EngineConfig();
         final var scoringConfig = new ScoringConfig();
         final var evaluatorConfig = new EvaluatorConfig();
@@ -45,24 +45,24 @@ public class FacepalmCLI {
 
         final var effectiveConfig = new FacepalmConfig(engineConfig, scoringConfig, evaluatorConfig, postProcessorConfig, patternConfig);
 
-        // Index classes and resources to discover components like {@code @Named} evaluators.
+        // Discover injectable components from the current classpath.
         final var space = new URLClassSpace(FacepalmCLI.class.getClassLoader());
 
-        // Initialize Guice for dependency injection.
+        // Initialize the dependency injection container.
         final var injector = Guice.createInjector(
             new WireModule(
                 // Perform a runtime scan of the classpath for @Named components.
                 new SpaceModule(space, BeanScanning.CACHE),
-                // Bridge Maven Log to a ConsoleLogger for CLI output.
+                // Bridge Maven logging to the console.
                 new FacepalmLogModule(
                     new DefaultLog(
                         new ConsoleLogger(Logger.LEVEL_DEBUG, "facepalm-cli"))),
-                // Bind the configuration into the Guice context.
+                // Bind the active configuration to the container.
                 new FacepalmConfigModule(effectiveConfig)
             )
         );
 
-        // Manually retrieve instances as the CLI environment lacks automatic injection.
+        // Resolve component instances for the scanning workflow.
         final var runner = injector.getInstance(FacepalmRunner.class);
         final var config = injector.getInstance(FacepalmConfig.class);
         final var log = injector.getInstance(Log.class);
@@ -72,6 +72,7 @@ public class FacepalmCLI {
                 "runner=" + runner + ", config=" + config + ", log=" + log);
         }
 
+        // Normalize the target scan path from arguments.
         final var root = Paths.get(args.length > 0 ? args[0] : ".").toAbsolutePath().normalize();
 
         try {

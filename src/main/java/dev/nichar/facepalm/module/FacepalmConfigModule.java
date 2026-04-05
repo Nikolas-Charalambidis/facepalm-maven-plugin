@@ -9,9 +9,8 @@ import lombok.RequiredArgsConstructor;
 
 
 /**
- * Configures the injection of the plugin's parameters.
- * Uses a provider method to expose the {@link FacepalmConfig} as a {@link Singleton},
- * ensuring all components share the same immutable configuration state.
+ * Guice module for injecting plugin configuration.
+ * Exposes {@link FacepalmConfig} as a singleton to ensure consistent state across all components.
  *
  * @author Nikolas Charalambidis
  * @since 1.0.0
@@ -22,7 +21,7 @@ public class FacepalmConfigModule extends AbstractModule {
     private final FacepalmConfig config;
 
     /**
-     * Provides the effective configuration instance to the container.
+     * Provides the pre-assembled configuration instance to the DI container.
      *
      * @return pre-assembled configuration DTO used for the current execution.
      */

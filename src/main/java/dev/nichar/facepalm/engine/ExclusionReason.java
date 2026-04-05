@@ -5,39 +5,39 @@ import lombok.RequiredArgsConstructor;
 
 
 /**
- * Reasons why a file was excluded from scanning.
+ * Categorizes reasons for file exclusion from the scanning process.
  */
 @Getter
 @RequiredArgsConstructor
 public enum ExclusionReason {
 
     /**
-     * File identified as binary (e.g., .exe, .jpg).
+     * Non-text asset detected.
      */
     BINARY_FILE("Binary file detected"),
 
     /**
-     * Path matches a user-defined exclusion pattern.
+     * File path matches a configured exclusion filter.
      */
     REGEX_MATCH("Path matched exclusion regex"),
 
     /**
-     * File size exceeds the configured maximum.
+     * File size exceeds the safety threshold for in-memory analysis.
      */
     SIZE_EXCEEDED("File size exceeds limit"),
 
     /**
-     * Path is hidden or starts with a dot.
+     * Hidden file or directory skipped by default.
      */
     HIDDEN_PATH("Hidden file or directory"),
 
     /**
-     * File is unreadable due to permissions or I/O errors.
+     * File could not be accessed due to filesystem constraints.
      */
     IO_ERROR("Unreadable/Access denied");
 
     /**
-     * Human-readable description for logs and reports.
+     * Localized description for reporting and diagnostic logging.
      */
     private final String description;
 }

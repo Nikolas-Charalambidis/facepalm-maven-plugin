@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 
 
 /**
- * Configuration for post-scan noise reduction and cleanup.
+ * Configuration for post-scan noise reduction and discovery refinement.
  */
 @Data
 @NoArgsConstructor
@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 public class PostProcessorConfig {
 
     /**
-     * Maximum occurrences allowed before a secret is suppressed as noise.
+     * Maximum detections allowed per file before suppression as high-volume noise.
      */
     private int highVolumeThreshold = 15;
 }

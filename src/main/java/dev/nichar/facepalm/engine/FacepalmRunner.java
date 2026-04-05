@@ -22,7 +22,8 @@ import dev.nichar.facepalm.report.Reporter;
 
 
 /**
- * Orchestrates the full scan lifecycle, from gitignore discovery to reporting and build failure evaluation.
+ * Orchestrates the scanning lifecycle.
+ * Manages gitignore discovery, extraction, scoring, and report serialization.
  */
 @Named
 @Singleton
@@ -48,11 +49,12 @@ public class FacepalmRunner {
     }
 
     /**
-     * Runs the end-to-end scanning workflow, saves results to JSON, and evaluates build failure.
+     * Executes the end-to-end scanning workflow.
+     * Evaluates build failure conditions based on discovery results.
      *
      * @param root Base directory to scan.
-     * @param outputDir Directory for report artifacts.
-     * @param version Project version being scanned.
+     * @param outputDir Target directory for findings and reports.
+     * @param version Scanner version for metadata.
      */
     public void run(@Nonnull final Path root,
                     @Nonnull final Path outputDir,
@@ -66,10 +68,11 @@ public class FacepalmRunner {
 
         reporter.printLogs(stats, findings);
 
-        // Save the findings to a machine-readable format for site generation.
+        // Persist findings for downstream report generation.
         final var resultsFile = new File(outputDir.toFile(), "facepalm-findings.json");
         saveFindingsToJson(findings, resultsFile);
 
+        // Enforce build failure policies based on finding severity.
         final var scoring = context.getScoring();
         final long errors = findings.stream().filter(f -> f.getSeverity(scoring) == Severity.ERROR).count();
         final long warnings = findings.stream().filter(f -> f.getSeverity(scoring) == Severity.WARNING).count();
@@ -77,7 +80,7 @@ public class FacepalmRunner {
     }
 
     /**
-     * Serializes the scan findings to a JSON file for later consumption by the reporting phase.
+     * Serializes findings to a machine-readable JSON format for the reporting phase.
      */
     private void saveFindingsToJson(List<Finding> findings, File outputFile) throws Exception {
         if (!outputFile.getParentFile().exists()) {
@@ -92,6 +95,9 @@ public class FacepalmRunner {
         mapper.writerWithDefaultPrettyPrinter().writeValue(outputFile, findingsDto);
     }
 
+    /**
+     * Maps a raw scan finding to a serializable DTO.
+     */
     public FindingReport mapToDto(Finding finding, ScoringConfig config) {
         return FindingReport.builder()
             .patternName(finding.getPatternName())
@@ -107,7 +113,7 @@ public class FacepalmRunner {
     }
 
     /**
-     * Fails the build if findings exceed configured thresholds.
+     * Terminates the build if findings exceed configured threat thresholds.
      */
     private void checkFailureConditions(long errors, long warnings) throws MojoFailureException {
         final var scoring = context.getScoring();

@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 
 
 /**
- * Heuristic configuration for evaluating the risk and legitimacy of discovered secrets.
+ * Configuration for heuristic evaluators that refine discovery risk and confidence.
  */
 @Data
 @NoArgsConstructor
@@ -18,53 +18,53 @@ import lombok.NoArgsConstructor;
 public class EvaluatorConfig {
 
     /**
-     * Regex to detect interpolated values or placeholders like ${API_KEY}.
+     * Regex for detecting interpolated values or variable placeholders.
      */
     private String interpolationPatternRegex = ".*?(?:\\$\\{.*}|\\{\\{.*}|<.*>|%.*%|\\[.*]).*";
 
     /**
-     * Compiled interpolation regex for performance.
+     * Compiled pattern for efficient placeholder detection.
      */
     private transient Pattern interpolationPattern;
 
     /**
-     * File extensions that increase the risk score.
+     * Extensions that typically contain production credentials.
      */
     private Set<String> highRiskExtensions = Set.of(".env", ".properties", ".yml", ".yaml", ".conf", ".ini");
 
     /**
-     * File extensions that decrease the risk score.
+     * Extensions that usually contain non-sensitive documentation or data.
      */
     private Set<String> lowRiskExtensions = Set.of(".md", ".txt", ".csv", ".log", ".example", ".sample");
 
     /**
-     * Keywords indicating a match is likely a placeholder or fake data.
+     * Keywords signaling a discovery is likely dummy or template data.
      */
     private Set<String> dummyKeywords = Set.of(
         "dummy", "your_api_key", "insert_here", "placeholder", "place_holder", "replace_me", "changeme", "change_me");
 
     /**
-     * Path segments indicating production-like environments.
+     * Path segments suggesting production-critical code.
      */
     private List<String> prodPathMarkers = List.of("src/main/", ".env", "config");
 
     /**
-     * Path segments indicating test or mock environments.
+     * Path segments suggesting test or non-production environments.
      */
     private List<String> testPathMarkers = List.of("test", "mock", "spec");
 
     /**
-     * Surrounding code keywords indicating production use.
+     * Surrounding keywords indicating live environment secrets.
      */
     private List<String> prodContextMarkers = List.of("prod", "live");
 
     /**
-     * Surrounding code keywords indicating mock or example use.
+     * Surrounding keywords indicating mock or example credentials.
      */
     private List<String> mockContextMarkers = List.of("example", "dummy", "fake", "mock");
 
     /**
-     * Returns the compiled interpolation pattern, initializing it if necessary.
+     * Resolves the compiled interpolation pattern for discovery validation.
      */
     public Pattern getInterpolationPattern() {
         if (interpolationPattern == null) {

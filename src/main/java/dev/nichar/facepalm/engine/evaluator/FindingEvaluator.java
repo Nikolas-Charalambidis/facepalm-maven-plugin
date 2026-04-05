@@ -8,13 +8,13 @@ import dev.nichar.facepalm.engine.Finding;
 
 
 /**
- * Contract for components that analyze and decorate scan findings.
- * Implementations can modify a finding's risk score or severity based on file context.
+ * Interface for components that refine discovery findings.
+ * Implementations analyze the file context to adjust risk and confidence scores.
  */
 public interface FindingEvaluator {
 
     /**
-     * Evaluates a finding and potentially modifies its scores or metadata.
+     * Evaluates a finding to decorate it with additional metadata or score adjustments.
      */
     void evaluate(@Nonnull Finding finding, @Nonnull FileContext context);
 }

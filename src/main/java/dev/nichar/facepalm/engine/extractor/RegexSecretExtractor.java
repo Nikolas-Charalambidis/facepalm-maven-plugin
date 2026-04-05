@@ -21,7 +21,7 @@ import dev.nichar.facepalm.pattern.SecretPattern;
 
 /**
  * Scans file content using regular expressions to identify potential secrets.
- * Supports both single-line matching and multi-line blocks like PEM certificates.
+ * Supports single-line matching and multi-line blocks like PEM certificates.
  */
 @Named
 @Singleton
@@ -48,7 +48,7 @@ public class RegexSecretExtractor implements SecretExtractor {
                 }
                 final var m = sp.getPattern().matcher(normalizedLine);
                 while (m.find()) {
-                    // Extract capture group 1 if present; otherwise the full match.
+                    // Extract group 1 if defined; otherwise return the full match.
                     final var secretValue = m.groupCount() >= 1 ? m.group(1) : m.group();
                     registerFinding(findings, localDedup, context, sp, secretValue, i + 1, rawLine);
                 }
@@ -60,11 +60,11 @@ public class RegexSecretExtractor implements SecretExtractor {
             if (!sp.isMultiLine()) {
                 continue;
             }
-            // Scans the entire file as one string.
+            // Scan the entire file as a continuous block for multi-line patterns.
             final var matcher = sp.getPattern().matcher(context.getFullContent());
             while (matcher.find()) {
                 final var secretValue = matcher.group();
-                // Map character offset to 1-based line number.
+                // Map character offset to its 1-based line number.
                 final var lineNum = (int) context.getFullContent()
                     .substring(0, matcher.start())
                     .chars()
@@ -77,7 +77,7 @@ public class RegexSecretExtractor implements SecretExtractor {
     }
 
     /**
-     * Constructs and registers a finding if its unique hash hasn't been seen yet.
+     * Initializes and registers a discovery finding if it passes local deduplication.
      */
     private void registerFinding(@Nonnull final List<Finding> findings,
                                  @Nonnull final Set<String> dedup,
@@ -87,14 +87,12 @@ public class RegexSecretExtractor implements SecretExtractor {
                                  final int lineNum,
                                  @Nonnull final String snippet) {
 
-        // Deduplication logic: If the SAME secret appears multiple times in the SAME file on DIFFERENT lines.
-        // It's treated as one finding, but we track all its occurrences.
+        // Use pattern name and secret value for file-level deduplication.
         final var hash = hashString(sp.getName() + value);
         final var existing = findings.stream().filter(f -> f.getDeduplicationHash().equals(hash)).findFirst();
 
         if (existing.isPresent()) {
-            // Already found this secret in this file; ignore additional occurrences
-            // One finding per file for the same secret.
+            // One finding per file for the same secret value to reduce noise.
             return;
         }
 
@@ -115,7 +113,7 @@ public class RegexSecretExtractor implements SecretExtractor {
     }
 
     /**
-     * Generates an SHA-256 hex string to uniquely identify a finding.
+     * Generates a unique SHA-256 fingerprint for a discovery finding.
      */
     private String hashString(@Nonnull final String input) {
         try {

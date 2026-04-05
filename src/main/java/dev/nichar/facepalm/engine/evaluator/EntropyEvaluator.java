@@ -13,7 +13,8 @@ import dev.nichar.facepalm.engine.Finding;
 
 
 /**
- * Evaluates a secret's randomness (Shannon entropy) to distinguish between genuine credentials and false positives.
+ * Evaluates a secret's randomness using Shannon entropy.
+ * High entropy often signals genuine credentials, while low entropy indicates repetitive or dummy data.
  */
 @Named
 @Singleton
@@ -21,23 +22,24 @@ class EntropyEvaluator implements FindingEvaluator {
 
     @Override
     public void evaluate(@Nonnull final Finding finding, @Nonnull final FileContext context) {
-        // Skip entropy check for Private Keys; the format itself is high-signal.
+        // Skip entropy checks for high-signal formats like Private Keys.
         if (finding.getPatternName().contains("Private Key") || finding.getSecretValue().contains("-----")) {
             return;
         }
 
         final var entropy = getShannonEntropy(finding.getSecretValue());
         if (entropy > 4.5) {
-            // Increases the score for highly random strings typical for API keys or passwords.
+            // Random strings typical of API keys or passwords.
             finding.log(String.format("High Entropy (%.2f)", entropy), 10, 20);
         } else if (entropy < 3.0) {
-            // Lowers the score for repetitive or predictable strings to reduce noise.
+            // Repetitive or predictable strings likely to be noise.
             finding.log(String.format("Low Entropy (%.2f)", entropy), 0, -40);
         }
     }
 
     /**
-     * Calculates Shannon Entropy; higher values indicate higher randomness.
+     * Calculates Shannon entropy for the given string.
+     * Values above 4.5 typically indicate high randomness.
      */
     private double getShannonEntropy(@Nullable final String string) {
         if (string == null || string.isEmpty()) {

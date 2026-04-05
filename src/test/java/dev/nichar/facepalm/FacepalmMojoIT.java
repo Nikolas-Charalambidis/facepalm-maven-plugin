@@ -10,7 +10,8 @@ import com.soebes.itf.jupiter.maven.MavenExecutionResult;
 
 
 /**
- * JUnit 5 extension that manages the execution of isolated Maven builds for testing.
+ * Integration tests for the Facepalm Maven Plugin.
+ * Manages isolated Maven builds to verify scanner behavior across various project scenarios.
  *
  * @author Nikolas Charalambidis
  */
@@ -18,9 +19,7 @@ import com.soebes.itf.jupiter.maven.MavenExecutionResult;
 class FacepalmMojoIT {
 
     /**
-     * Triggers a full Maven execution using the 'verify' goal on a clean project sample.
-     *
-     * @param result Maven execution result
+     * Verifies scanner success on a clean project baseline.
      */
     @MavenTest
     @MavenGoal("verify")
@@ -43,9 +42,7 @@ class FacepalmMojoIT {
     }
 
     /**
-     * Verifies findings are logged without breaking the build when failOnError is false.
-     *
-     * @param result Maven execution result
+     * Verifies discoveries are logged without breaking the build by default.
      */
     @MavenTest
     @MavenGoal("verify")
@@ -73,9 +70,7 @@ class FacepalmMojoIT {
     }
 
     /**
-     * Verifies that the plugin correctly terminates the build when high-risk secrets exist.
-     *
-     * @param result Maven execution result
+     * Verifies that the plugin correctly terminates the build when thresholds are met.
      */
     @MavenTest
     @MavenGoal("verify")

@@ -7,9 +7,8 @@ import lombok.RequiredArgsConstructor;
 
 
 /**
- * Bridges the external logging environment into the DI container.
- * Manually binds the provided Maven {@link Log} instance.
- * Internal components can perform logging without being coupled to the specific execution context.
+ * Guice module for bridging the Maven logging environment.
+ * Binds the active {@link Log} instance to the DI container for internal component use.
  *
  * @author Nikolas Charalambidis
  * @since 1.0.0
@@ -21,7 +20,7 @@ public class FacepalmLogModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        // Best for simple interface-to-instance bindings.
+        // Bind the Maven logger to the container for simple interface-to-instance resolution.
         bind(Log.class).toInstance(log);
     }
 }

@@ -5,24 +5,24 @@ import lombok.RequiredArgsConstructor;
 
 
 /**
- * Defines finding risk levels and their reporting icons.
+ * Classifies findings into actionable risk levels.
  */
 @Getter
 @RequiredArgsConstructor
 public enum Severity {
 
     /**
-     * Low-risk secrets or informational findings.
+     * Low-risk detections or informational insights.
      */
     INFO("⚪"),
 
     /**
-     * Moderate-risk findings that may require attention.
+     * Moderate-risk findings requiring review.
      */
     WARNING("🟡"),
 
     /**
-     * High-risk, high-confidence secrets.
+     * Critical findings that typically trigger build failure.
      */
     ERROR("🔴");
 

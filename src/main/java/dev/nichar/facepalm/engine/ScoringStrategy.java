@@ -1,12 +1,12 @@
 package dev.nichar.facepalm.engine;
 
 /**
- * Mathematical strategies for merging Risk and Confidence scores into a final Threat Level.
+ * Mathematical strategies for calculating a composite threat score from risk and confidence.
  */
 public enum ScoringStrategy {
 
     /**
-     * Standard arithmetic mean for a balanced and predictable score.
+     * Arithmetic mean for a balanced, linear score.
      */
     AVERAGE {
         public double calculate(int r, int c) {
@@ -15,7 +15,7 @@ public enum ScoringStrategy {
     },
 
     /**
-     * Geometric mean that discounts findings with one very low value.
+     * Geometric mean that heavily discounts findings with low individual scores.
      */
     GEOMETRIC {
         public double calculate(int r, int c) {
@@ -24,7 +24,7 @@ public enum ScoringStrategy {
     },
 
     /**
-     * Root Mean Square (Quadratic Mean) that favors higher values.
+     * Quadratic mean that emphasizes higher values to surface critical findings.
      */
     ROOT_MEAN_SQUARE {
         public double calculate(int r, int c) {
@@ -33,7 +33,7 @@ public enum ScoringStrategy {
     },
 
     /**
-     * Weights the square of the Risk score to surface extreme risks regardless of confidence.
+     * Weights the square of the risk score to prioritize extreme threats.
      */
     WEIGHTED_QUADRATIC {
         public double calculate(int r, int c) {
@@ -43,7 +43,7 @@ public enum ScoringStrategy {
     },
 
     /**
-     * Uses the maximum value if Risk is critical (>90); otherwise defaults to a 50/50 split.
+     * Returns the maximum score for critical risks; otherwise applies a balanced split.
      */
     GATEKEEPER {
         public double calculate(int r, int c) {
@@ -55,7 +55,7 @@ public enum ScoringStrategy {
     };
 
     /**
-     * Calculates the final composite score based on the strategy.
+     * Computes the final composite score based on the implementation strategy.
      */
     public abstract double calculate(int risk, int confidence);
 }

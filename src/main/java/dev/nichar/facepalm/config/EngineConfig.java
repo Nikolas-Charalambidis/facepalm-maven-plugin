@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 
 
 /**
- * Configuration for the scanning engine execution and file filtering.
+ * Configuration for scanner execution and file filtering logic.
  */
 @Data
 @NoArgsConstructor
@@ -17,40 +17,40 @@ import lombok.NoArgsConstructor;
 public class EngineConfig {
 
     /**
-     * Default directories to ignore during file traversal.
+     * Internal defaults for directories to ignore during discovery.
      */
     public static final Set<String> SKIP_DIRS = Set.of(".git", ".idea");
 
     /**
-     * Number of concurrent threads used for scanning.
+     * Thread pool size for parallel scanning. Defaults to available CPUs.
      */
     private Integer threads = Runtime.getRuntime().availableProcessors();
 
     /**
-     * Maximum file size in bytes; larger files are ignored to prevent memory exhaustion.
+     * Safety limit for file size to prevent memory exhaustion during analysis.
      */
     @Getter
     private long maxFileSizeBytes = 5 * 1024 * 1024;
 
     /**
-     * Regex for identifying binary or non-text files to exclude from the scan.
+     * Filter for non-text assets and binary artifacts.
      */
     @Getter
     private String skipBinaryRegex = ".*\\.(png|jpg|jpeg|gif|pdf|zip|jar|class|tar|gz|exe|dll)$";
 
     /**
-     * Directories to skip during the recursive scan.
+     * User-defined directory exclusions.
      */
     private Set<String> skipDirs;
 
     /**
-     * If true, logs every file that was successfully analyzed.
+     * Enable verbose logging for successfully processed files.
      */
     @Getter
     private boolean showProcessed = false;
 
     /**
-     * If true, logs details about skipped files.
+     * Enable verbose logging for files skipped by filters.
      */
     @Getter
     private boolean showSkipped = false;

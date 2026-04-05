@@ -18,12 +18,12 @@ import lombok.NoArgsConstructor;
 public class PatternConfig {
 
     /**
-     * User-defined list of patterns to supplement or replace built-in logic.
+     * User-defined patterns to supplement or replace built-in logic.
      */
     private List<SecretPattern> overrides;
 
     /**
-     * Returns the active list of detection patterns, falling back to defaults if none are provided.
+     * Returns the active detection patterns, falling back to defaults if none are defined.
      */
     public List<SecretPattern> getOverrides() {
         return overrides != null ? overrides : SecretPatternRegistry.DEFAULT_PATTERNS;

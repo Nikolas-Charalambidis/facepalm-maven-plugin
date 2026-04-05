@@ -13,7 +13,8 @@ import lombok.RequiredArgsConstructor;
 
 
 /**
- * Aggregates plugin configurations into a single hierarchical structure.
+ * Root configuration object for the Facepalm plugin.
+ * Aggregates engine, scoring, and heuristic settings into a single hierarchy.
  */
 @Data
 @AllArgsConstructor
@@ -21,27 +22,27 @@ import lombok.RequiredArgsConstructor;
 public class FacepalmConfig {
 
     /**
-     * Scanning engine execution and file filtering settings.
+     * Settings for engine execution and file filtering.
      */
     private EngineConfig engine = new EngineConfig();
 
     /**
-     * Finding scoring and build interruption thresholds.
+     * Rules for scoring findings and failing the build.
      */
     private ScoringConfig scoring = new ScoringConfig();
 
     /**
-     * Risk and legitimacy heuristics for discovered secrets.
+     * Heuristics for validating and weighting discovered secrets.
      */
     private EvaluatorConfig evaluators = new EvaluatorConfig();
 
     /**
-     * Noise reduction and post-scan cleanup settings.
+     * Logic for noise reduction and post-scan analysis.
      */
     private PostProcessorConfig postProcessing = new PostProcessorConfig();
 
     /**
-     * Secret detection pattern definitions and overrides.
+     * Definitions for regex-based secret detection.
      */
     private PatternConfig patterns = new PatternConfig();
 }

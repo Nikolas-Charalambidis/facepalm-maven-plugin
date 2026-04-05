@@ -21,7 +21,8 @@ import org.apache.maven.plugin.logging.SystemStreamLog;
 
 
 /**
- * Manages {@code .gitignore} files to filter paths from the scan.
+ * Manages {@code .gitignore} files to provide context-aware path filtering.
+ * Parses project-level ignore rules to identify files with reduced public exposure.
  */
 @Named
 @Singleton
@@ -30,7 +31,7 @@ public class GitIgnoreService {
     private final Log log;
 
     /**
-     * Maps directory paths to their compiled glob patterns.
+     * Map of directory paths to their compiled glob matchers.
      */
     private final TreeMap<Path, List<PathMatcher>> registry = new TreeMap<>();
 
@@ -40,7 +41,7 @@ public class GitIgnoreService {
     }
 
     /**
-     * Discovers and parses all {@code .gitignore} files under the root directory.
+     * Discovers and parses all {@code .gitignore} files within the target project.
      */
     public void loadAllGitIgnores(@Nonnull final Path root) {
         try (Stream<Path> paths = Files.walk(root)) {
@@ -52,7 +53,7 @@ public class GitIgnoreService {
     }
 
     /**
-     * Checks if a path matches any discovered ignore patterns.
+     * Returns true if the specified path matches any registered ignore patterns.
      */
     public boolean isIgnored(@Nonnull final Path filePath) {
         return registry.entrySet().stream()
@@ -62,7 +63,7 @@ public class GitIgnoreService {
     }
 
     /**
-     * Converts ignore patterns from a file into functional {@link PathMatcher}s.
+     * Translates raw ignore patterns into functional {@link PathMatcher}s.
      */
     private void parseGitIgnoreFile(@Nonnull final Path ignoreFile) {
         final var directory = ignoreFile.getParent();
@@ -70,19 +71,19 @@ public class GitIgnoreService {
 
         try (final var lines = Files.lines(ignoreFile)) {
             lines.map(String::trim)
-                // Skips empty lines and comments.
+                // Skip empty lines and comments per Git specification.
                 .filter(line -> !line.isEmpty() && !line.startsWith("#"))
                 .forEach(pattern -> {
                     var glob = pattern;
                     if (pattern.endsWith("/")) {
-                        // Converts directory-only match to a recursive glob.
+                        // Convert directory-only matches to recursive globs.
                         glob += "**";
                     }
                     if (!pattern.startsWith("**/") && !pattern.startsWith("/")) {
-                        // Ensures relative patterns match at any depth within the subdirectory.
+                        // Ensure relative patterns match at any depth within the directory.
                         glob = "**/" + glob;
                     }
-                    // Constructs a full OS-agnostic glob string using forward slashes.
+                    // Construct OS-agnostic glob strings.
                     // See: https://en.wikipedia.org/wiki/Glob_(programming)
                     final var fullGlob = "glob:" + directory.toString().replace("\\", "/") + "/" + glob;
                     matchers.add(FileSystems.getDefault().getPathMatcher(fullGlob));

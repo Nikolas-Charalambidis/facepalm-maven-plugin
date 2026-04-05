@@ -5,37 +5,35 @@ import java.util.List;
 
 import jakarta.annotation.Nonnull;
 
-import dev.nichar.facepalm.engine.evaluator.FindingEvaluator;
-import dev.nichar.facepalm.engine.extractor.SecretExtractor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.Value;
 
 
 /**
- * Read-only container for a file being scanned, including its path, raw content, and split lines.
+ * Immutable snapshot of a file being analyzed.
+ * Provides access to raw content, line-delimited text, and filesystem metadata.
  */
 @Getter
 @RequiredArgsConstructor
 public class FileContext {
 
     /**
-     * Filesystem path of the file.
+     * Filesystem path to the source file.
      */
     private final Path path;
 
     /**
-     * Raw content of the file for multi-line regex matching.
+     * Unmodified content for multi-line regex matching.
      */
     private final String fullContent;
 
     /**
-     * Content split into lines for single-line scanning and context windowing.
+     * Line-delimited content for single-line analysis and context extraction.
      */
     private final List<String> lines;
 
     /**
-     * Safely retrieves a line by index, returning an empty string if out of bounds.
+     * Returns the line at the specified index, or an empty string if out of bounds.
      */
     @Nonnull
     public String getLineOrEmpty(int index) {

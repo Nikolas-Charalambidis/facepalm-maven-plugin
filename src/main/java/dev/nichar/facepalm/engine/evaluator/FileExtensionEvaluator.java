@@ -11,8 +11,8 @@ import dev.nichar.facepalm.engine.Finding;
 
 
 /**
- * Adjusts finding scores based on the file extension.
- * Prioritizes sensitive configuration files and discounts findings in low-risk files like logs or documentation.
+ * Evaluates findings based on file extensions.
+ * Prioritizes sensitive configuration formats and discounts findings in documentation or logs.
  */
 @Named
 @Singleton
@@ -25,11 +25,11 @@ class FileExtensionEvaluator implements FindingEvaluator {
     public void evaluate(@Nonnull final Finding finding, @Nonnull final FileContext context) {
         final var fileName = context.getPath().getFileName().toString().toLowerCase();
 
-        // Increase score for sensitive configuration files (e.g., .env, .properties).
+        // Elevate risk for sensitive formats like .env or .properties.
         if (config.getEvaluators().getHighRiskExtensions().stream().anyMatch(fileName::endsWith)) {
             finding.log("High Risk Configuration File", 15, 20);
         }
-        // Decrease score for lower-priority files (e.g., .md, .txt, .log).
+        // Discount findings in low-risk files like documentation or logs.
         else if (config.getEvaluators().getLowRiskExtensions().stream().anyMatch(fileName::endsWith)) {
             finding.log("Documentation/Log File", -30, -40);
         }

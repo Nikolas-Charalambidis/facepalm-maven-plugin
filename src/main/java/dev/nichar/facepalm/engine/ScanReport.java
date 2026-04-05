@@ -11,7 +11,8 @@ import lombok.NoArgsConstructor;
 
 
 /**
- * Structured output of a security scan, aggregating findings, metadata, and rule definitions.
+ * Structured report aggregating findings, metadata, and security rule definitions.
+ * Serves as the primary data model for HTML and SARIF report generation.
  */
 @Data
 @Builder
@@ -20,27 +21,27 @@ import lombok.NoArgsConstructor;
 public class ScanReport {
 
     /**
-     * Environment data including scanner version and execution duration.
+     * Environment details including version and execution timing.
      */
     private RunMetadata metadata;
 
     /**
-     * Statistical overview of scan results and severity breakdowns.
+     * Statistical overview of the scan results.
      */
     private ScanSummary summary;
 
     /**
-     * Lookup map for rule details referenced in the findings.
+     * Dictionary of security rules referenced by the findings.
      */
     private Map<String, RuleDefinition> ruleDictionary;
 
     /**
-     * List of unique security leaks discovered and deduplicated.
+     * List of unique security leaks identified across the project.
      */
     private List<UniqueLeak> leaks;
 
     /**
-     * Represents a unique secret or vulnerability found in one or more locations.
+     * Aggregated view of a specific secret found in one or more locations.
      */
     @Data
     @Builder
@@ -49,27 +50,27 @@ public class ScanReport {
     public static class UniqueLeak {
 
         /**
-         * ID of the primary rule that flagged this finding.
+         * Identifier for the primary detection pattern.
          */
         private String primaryRuleId;
 
         /**
-         * IDs of additional rules that also flagged this secret.
+         * Identifiers for additional rules that flagged this secret.
          */
         private List<String> supplementalRuleIds;
 
         /**
-         * Final calculated risk level (0-100).
+         * Risk score (0-100) based on pattern and context.
          */
         private int totalRisk;
 
         /**
-         * Final calculated confidence level (0-100).
+         * Confidence score (0-100) reflecting detection reliability.
          */
         private int totalConfidence;
 
         /**
-         * Composite threat level calculated via a {@link ScoringStrategy}.
+         * Composite threat level calculated from risk and confidence.
          */
         private double aggregateScore;
 
@@ -78,23 +79,23 @@ public class ScanReport {
         private String maskedSecret;
 
         /**
-         * Unique hash for tracking this leak across scans.
+         * Unique fingerprint for tracking this leak across scan iterations.
          */
         private String hash;
 
         /**
-         * List of every file and line where this exact secret occurs.
+         * Locations within the project where this secret was detected.
          */
         private List<Occurrence> occurrences;
 
         /**
-         * Log of score adjustments during evaluation.
+         * Historical log of score adjustments during the evaluation phase.
          */
         private List<String> scoreHistory;
     }
 
     /**
-     * Descriptive metadata for a security rule.
+     * Detailed metadata for a specific security rule.
      */
     @Data
     @Builder
@@ -109,12 +110,12 @@ public class ScanReport {
         private String description;
 
         /**
-         * Guidance on rotating or invalidating the leaked secret.
+         * Guidance for rotating or invalidating the compromised secret.
          */
         private String remediation;
 
         /**
-         * Metadata tags for filtering (e.g., "cloud", "aws").
+         * Classification tags for filtering (e.g., "cloud", "aws").
          */
         private List<String> tags;
 
@@ -122,7 +123,7 @@ public class ScanReport {
     }
 
     /**
-     * Location of a leak within the filesystem.
+     * Represents a specific detection within a file.
      */
     @Data
     @Builder
@@ -131,25 +132,25 @@ public class ScanReport {
     public static class Occurrence {
 
         /**
-         * Path relative to the project root.
+         * File path relative to the project root.
          */
         private String relativePath;
 
         /**
-         * Full system path for local triage.
+         * Full absolute system path for local developer triage.
          */
         private String absolutePath;
 
         private int lineNumber;
 
         /**
-         * Code snippet surrounding the finding for context.
+         * Code snippet surrounding the detection to provide immediate context.
          */
         private String snippet;
     }
 
     /**
-     * Environment and timing data for the scan execution.
+     * Metadata describing the scan execution environment.
      */
     @Data
     @Builder
@@ -167,7 +168,7 @@ public class ScanReport {
     }
 
     /**
-     * High-level summary of the scan results.
+     * Quantitative summary of the scan results.
      */
     @Data
     @Builder
@@ -176,12 +177,12 @@ public class ScanReport {
     public static class ScanSummary {
 
         /**
-         * Total number of unique secrets identified.
+         * Count of unique secrets discovered.
          */
         private int totalLeaksFound;
 
         /**
-         * Cumulative count of all secret detections.
+         * Cumulative count of every secret occurrence found.
          */
         private int totalOccurrences;
 

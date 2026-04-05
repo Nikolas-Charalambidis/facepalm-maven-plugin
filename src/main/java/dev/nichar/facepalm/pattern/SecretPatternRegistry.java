@@ -7,19 +7,18 @@ import dev.nichar.facepalm.engine.evaluator.FindingEvaluator;
 import lombok.experimental.UtilityClass;
 
 /**
- * Central repository for built-in secret detection patterns.
- * This registry contains the "Gold Standard" patterns for Facepalm's heuristic engine.
- * Each pattern includes base scoring and confidence levels that are further refined by the {@link FindingEvaluator} during a scan.
+ * Central registry for built-in secret detection patterns.
+ * Defines "Gold Standard" signatures for cloud providers, databases, and AI platforms.
  *
  * @author Nikolas Charalambidis
  * @since 1.0.0
  */
-@UtilityClass // Ensures this class cannot be instantiated and is final.
+@UtilityClass
 public class SecretPatternRegistry {
 
     /**
-     * The immutable list of default patterns used by the scanner when no overrides are provided.
-     * Patterns are ordered from high-confidence specific signatures to lower-confidence generic matches.
+     * Immutable list of default patterns used by the scanner.
+     * Ordered from high-confidence specific signatures to generic fallback patterns.
      */
     public static final List<SecretPattern> DEFAULT_PATTERNS = List.of(
         // Cloud & Infrastructure Providers

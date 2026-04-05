@@ -30,122 +30,122 @@ import dev.nichar.facepalm.module.FacepalmLogModule;
 
 
 /**
- * Maven Mojo that executes security scans during the {@code verify} phase.
- * Aggregates configuration into an immutable context and bootstraps the Guice engine.
+ * Entry point for security scans during the {@code verify} phase.
+ * Bootstraps the Guice engine and executes the scanning pipeline.
  */
 @Mojo(name = "scan", defaultPhase = LifecyclePhase.VERIFY, threadSafe = true, configurator = COMMA_SEPARATED_CONFIGURATOR)
 public class FacepalmMojo extends AbstractMojo {
 
     /**
-     * Plugin descriptor for version access.
+     * Metadata about the current plugin execution.
      */
     @Parameter(defaultValue = "${plugin}", readonly = true)
     private PluginDescriptor pluginDescriptor;
 
     /**
-     * Project base directory.
+     * Maven project base directory.
      */
     @Parameter(defaultValue = "${project.basedir}", readonly = true)
     private File baseDir;
 
     /**
-     * Directory for scan reports.
+     * Build output directory for reports and artifacts.
      */
     @Parameter(defaultValue = "${project.build.directory}", readonly = true)
     private File outputDirectory;
 
     /**
-     * Root directory for scanning.
+     * Target directory for the security scan.
      */
     @Parameter(property = "root")
     private File root;
 
     /**
-     * Concurrent threads for scanning; defaults to available processors.
+     * Thread pool size for parallel scanning. Defaults to CPU count.
      */
     @Parameter(property = "threads")
     private Integer threads;
 
     /**
-     * Maximum file size in bytes (default 5MB).
+     * Fail-safe limit for file sizes. Prevents memory exhaustion.
      */
     @Parameter(property = "maxFileSizeBytes", defaultValue = "5242880")
     private long maxFileSizeBytes;
 
     /**
-     * Regex to skip binary files.
+     * Filter for binary files and non-text assets.
      */
     @Parameter(property = "skipBinaryRegex", defaultValue = ".*\\.(png|jpg|jpeg|gif|pdf|zip|jar|class|tar|gz|exe|dll)$")
     private String skipBinaryRegex;
 
     /**
-     * Directories to exclude from scanning.
+     * User-defined exclusions for the scanner.
      */
     @Parameter(property = "skipDirs")
     private Set<String> skipDirs;
 
     /**
-     * Log every processed file.
+     * Log successfully analyzed files.
      */
     @Parameter(property = "showProcessed", defaultValue = "false")
     private boolean showProcessed;
 
     /**
-     * Log every skipped file.
+     * Log files skipped by filters.
      */
     @Parameter(property = "showSkipped", defaultValue = "false")
     private boolean showSkipped;
 
     /**
-     * Score threshold (0-100) for high-risk findings.
+     * Minimum score to trigger a critical failure.
      */
     @Parameter(property = "errorThreshold", defaultValue = "80")
     private int errorThreshold;
 
     /**
-     * Score threshold (0-100) for moderate-risk findings.
+     * Minimum score to trigger a warning.
      */
     @Parameter(property = "warningThreshold", defaultValue = "40")
     private int warningThreshold;
 
     /**
-     * Log detailed scoring breakdowns.
+     * Verbose logging for scoring decisions.
      */
     @Parameter(property = "showScoring", defaultValue = "false")
     private boolean showScoring;
 
     /**
-     * Log discovery and exclusion details for auditing scan coverage.
+     * Statistics for scan coverage and exclusions.
      */
     @Parameter(property = "showDetails", defaultValue = "false")
     private boolean showDetails;
 
     /**
-     * Fail build if any finding reaches the error threshold.
+     * Stop the build on high-risk findings.
      */
     @Parameter(property = "failOnError", defaultValue = "true")
     private boolean failOnError;
 
     /**
-     * Fail build if any finding reaches the warning threshold.
+     * Stop the build on moderate-risk findings.
      */
     @Parameter(property = "failOnWarnings", defaultValue = "false")
     private boolean failOnWarnings;
 
     /**
-     * Configuration for risk and legitimacy evaluators.
+     * Logic for evaluating leak legitimacy.
      */
     @Parameter
     private EvaluatorConfig evaluators = new EvaluatorConfig();
 
     /**
-     * Custom or override secret detection patterns.
+     * Definitions for secret detection.
      */
     @Parameter
     private PatternConfig patterns = new PatternConfig();
 
     /**
-     * Post-processing configuration for noise reduction.
+     * Logic for noise reduction and deduplication.
      */
     @Parameter
     private PostProcessorConfig postProcessing = new PostProcessorConfig();
@@ -153,26 +153,26 @@ public class FacepalmMojo extends AbstractMojo {
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
 
-        // Assemble configuration from Maven parameters.
+        // Map Maven parameters to internal configuration.
         final var engine = new EngineConfig(threads, maxFileSizeBytes, skipBinaryRegex, skipDirs, showProcessed, showSkipped);
         final var scoring = new ScoringConfig(errorThreshold, warningThreshold, showScoring, showDetails, failOnError, failOnWarnings);
         final var effectiveConfig = new FacepalmConfig(engine, scoring, evaluators, postProcessing, patterns);
 
-        // Index classes and resources to discover components like {@code @Named} evaluators.
+        // Discover components using Sisu indexing.
         final var space = new URLClassSpace(getClass().getClassLoader());
 
-        // Initialize Guice for dependency injection.
+        // Initialize the Guice container.
         final var injector = Guice.createInjector(
             new WireModule(
                 // Use pre-compiled JSR330 metadata for rapid startup.
                 new SpaceModule(space, BeanScanning.INDEX),
-                // Bind Maven Log and configuration.
+                // Bridge Maven Log and state into the container.
                 new FacepalmLogModule(getLog()),
                 new FacepalmConfigModule(effectiveConfig)
             )
         );
 
-        // Manual bootstrapping is needed because Maven instantiates the Mojo before the injector exists.
+        // Inject components manually since Maven handles Mojo instantiation.
         final var runner = injector.getInstance(FacepalmRunner.class);
         final var config = injector.getInstance(FacepalmConfig.class);
         final var log = injector.getInstance(Log.class);
@@ -184,6 +184,7 @@ public class FacepalmMojo extends AbstractMojo {
 
         log.info("Starting facepalm-maven-plugin " + pluginDescriptor.getVersion());
 
+        // Normalize the target scan path.
         final var rootFile = root != null ? root : baseDir;
         final var rootPath = rootFile.toPath().toAbsolutePath().normalize();
 

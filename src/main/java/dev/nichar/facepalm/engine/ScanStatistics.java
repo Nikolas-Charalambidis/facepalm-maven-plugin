@@ -10,7 +10,8 @@ import lombok.Data;
 
 
 /**
- * Thread-safe container for real-time metrics during a scanning session.
+ * Thread-safe metrics container for real-time scan monitoring.
+ * Tracks file discovery, scan progress, and exclusion reasons across parallel threads.
  */
 @Data
 public class ScanStatistics {
@@ -18,34 +19,34 @@ public class ScanStatistics {
     private final long startTimeMillis = System.currentTimeMillis();
 
     /**
-     * Total number of files found during directory walking.
+     * Files discovered during project traversal.
      */
     private final LongAdder filesDiscovered = new LongAdder();
 
     /**
-     * Total number of files that passed filters and were scanned.
+     * Files that passed filters and were successfully analyzed.
      */
     private final LongAdder filesScanned = new LongAdder();
 
     /**
-     * Count of scans per file extension.
+     * Distribution of scanned files by extension.
      */
     private final ConcurrentHashMap<String, LongAdder> suffixCounts = new ConcurrentHashMap<>();
 
     /**
-     * Breakdown of file exclusions by reason.
+     * Frequency of file exclusions grouped by reason.
      */
     private final ConcurrentHashMap<ExclusionReason, LongAdder> exclusionBreakdown = new ConcurrentHashMap<>();
 
     /**
-     * Increments the total discovery counter.
+     * Increments the total file discovery count.
      */
     public void recordDiscovery() {
         filesDiscovered.increment();
     }
 
     /**
-     * Records a successful scan and tracks the file's extension.
+     * Logs a successful file scan and tracks its extension for reporting.
      */
     public void recordScan(@Nonnull final Path path) {
         filesScanned.increment();
@@ -56,14 +57,14 @@ public class ScanStatistics {
     }
 
     /**
-     * Records a file exclusion reason.
+     * Logs a file exclusion and the associated reason.
      */
     public void recordExclusion(ExclusionReason reason) {
         exclusionBreakdown.computeIfAbsent(reason, k -> new LongAdder()).increment();
     }
 
     /**
-     * Returns the scan duration in milliseconds.
+     * Returns the total execution time in milliseconds.
      */
     public long getDuration() {
         return System.currentTimeMillis() - startTimeMillis;

@@ -13,9 +13,8 @@ import dev.nichar.facepalm.engine.Finding;
 
 
 /**
- * Refines individual finding scores based on the collective context of all findings in a file.
- * Boosts risk for files containing multiple distinct secret types, while discounting high-volume
- * matches (like logs or datasets) to reduce noise.
+ * Refines discovery findings based on the collective context of a file.
+ * Elevates risk for files with multiple distinct secret types and discounts high-volume noise.
  */
 @Named
 @Singleton
@@ -38,12 +37,12 @@ class CompositeScoringPostProcessor implements FileFindingsPostProcessor {
 
         final var conf = config.getPostProcessing();
         for (final var finding : fileFindings) {
-            // Checks if the file is "noisy" by exceeding the high-volume threshold (e.g., 50+ hits).
+            // Categorize file as "noisy" if detections exceed the high-volume threshold.
             if (totalInFile > conf.getHighVolumeThreshold()) {
-                // Lowers score/severity as high volume often indicates a false positive, log dump, or public dataset.
+                // High volume often indicates log dumps, public datasets, or false positives.
                 finding.log("High Volume File (Threshold: " + conf.getHighVolumeThreshold() + ")", -25, -30);
             }
-            // If the volume is low but there are multiple DIFFERENT types of secrets.
+            // Elevate risk if a single file contains multiple distinct secret types.
             else if (uniquePatterns > 1) {
                 // Increases risk because a file containing multiple secret types is statistically more likely to be a real credential leak.
                 finding.log("Composite Risk: Multiple distinct secrets in one file", 15, 10);

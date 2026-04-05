@@ -16,9 +16,8 @@ import org.codehaus.plexus.configuration.PlexusConfiguration;
 
 
 /**
- * A custom Plexus converter that transforms comma-separated strings into {@link java.util.Set} objects.
- * It resolves Maven expressions like ${property} before splitting the input and trimming individual elements.
- * This ensures compatibility with both flat XML values and standard nested Maven configuration tags.
+ * Custom Plexus converter for transforming comma-separated strings into {@link java.util.Set} objects.
+ * Resolves Maven expressions and trims whitespace to ensure clean configuration injection.
  */
 public class CommaSeparatedSetConverter extends AbstractConfigurationConverter {
 
@@ -36,10 +35,9 @@ public class CommaSeparatedSetConverter extends AbstractConfigurationConverter {
                                     final ExpressionEvaluator expressionEvaluator,
                                     final ConfigurationListener listener) throws ComponentConfigurationException {
 
-        // Store the result of the Maven expression resolution.
         final Object evaluatedValue;
         try {
-            // Uses the evaluator to turn strings like "${project.build.directory}" into "C:/project/target".
+            // Resolve Maven expressions like "${project.build.directory}".
             evaluatedValue = expressionEvaluator.evaluate(configuration.getValue());
         } catch (Exception e) {
             throw new ComponentConfigurationException("Failed to evaluate configuration expression", e);
@@ -47,7 +45,7 @@ public class CommaSeparatedSetConverter extends AbstractConfigurationConverter {
 
         final var value = evaluatedValue != null ? evaluatedValue.toString() : null;
 
-        // Splits a non-empty, comma-delimited string into a set of unique, trimmed elements while filtering out any blank entries.
+        // Split comma-delimited strings into unique, trimmed elements.
         if (value != null && !value.trim().isEmpty()) {
             return Arrays.stream(value.split(","))
                 // Removes all Unicode whitespace (cleaner than trim()).
@@ -58,8 +56,7 @@ public class CommaSeparatedSetConverter extends AbstractConfigurationConverter {
                 .collect(Collectors.toCollection(LinkedHashSet::new));
         }
 
-        // Fallback: Processes traditional nested XML tags by iterating through each child, resolving potential Maven expressions,
-        // and collecting the results into a unique set.
+        // Fallback: process traditional nested XML configuration tags.
         if (configuration.getChildCount() > 0) {
             final var set = new LinkedHashSet<>();
             for (var child : configuration.getChildren()) {
@@ -75,7 +72,7 @@ public class CommaSeparatedSetConverter extends AbstractConfigurationConverter {
             return set;
         }
 
-        // Default to empty set if nothing is provided.
+        // Default to an empty set if no configuration is provided.
         return new HashSet<>();
     }
 }

@@ -9,13 +9,12 @@ import dev.nichar.facepalm.engine.Finding;
 
 
 /**
- * Contract for components that scan file content for potential secrets.
- * Implementations process a {@link FileContext} and return identified findings.
+ * Interface for components that identify potential secrets within file content.
  */
 public interface SecretExtractor {
 
     /**
-     * Scans the file context and extracts sensitive information.
+     * Analyzes the file context and returns a list of discovered sensitive patterns.
      */
     @Nonnull
     List<Finding> extract(@Nonnull final FileContext context);

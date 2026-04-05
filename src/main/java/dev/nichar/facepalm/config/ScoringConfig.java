@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 
 
 /**
- * Configuration for finding scores and build interruption thresholds.
+ * Configuration for discovery scoring and build interruption thresholds.
  */
 @Data
 @NoArgsConstructor
@@ -14,32 +14,32 @@ import lombok.NoArgsConstructor;
 public class ScoringConfig {
 
     /**
-     * Score threshold (0-100) for high-risk errors.
+     * Minimum score to classify a finding as high-risk (Critical).
      */
     private int errorThreshold = 80;
 
     /**
-     * Score threshold (0-100) for moderate-risk warnings.
+     * Minimum score to classify a finding as moderate-risk (Warning).
      */
     private int warningThreshold = 40;
 
     /**
-     * If true, logs the heuristic score breakdown for each finding.
+     * Enable verbose logging for heuristic scoring decisions.
      */
     private boolean showScoring = false;
 
     /**
-     * If true, logs a detailed breakdown of file discovery and scan coverage.
+     * Enable detailed logging for scan coverage and discovery metrics.
      */
     private boolean showDetails = false;
 
     /**
-     * If true, fails the build when findings meet the error threshold.
+     * Terminate the build on high-risk findings.
      */
     private boolean failOnError = true;
 
     /**
-     * If true, fails the build when findings meet the warning threshold.
+     * Terminate the build on moderate-risk findings.
      */
     private boolean failOnWarnings = false;
 }

@@ -21,7 +21,7 @@ jobs:
           java-version: '17'
           cache: 'maven'
 
-      # Run jxr here so the PMD report in the artifacts has working links/
+      # Run jxr here so the PMD report in the artifacts has working links.
       - name: Build and Test
         run: mvn -B clean jxr:jxr verify
 
@@ -29,5 +29,5 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: pmd-reports-${{ github.event.pull_request.number || 'main' }}
+          name: pmd-reports-${{ github.event.pull_request.number || 'master' }}
           path: target/site

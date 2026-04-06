@@ -51,11 +51,11 @@ public class FacepalmReportMojo extends AbstractMavenReport {
      * Translates raw JSON data into structured Doxia Sink elements.
      */
     @Override
-    protected void executeReport(Locale locale) throws MavenReportException {
+    protected void executeReport(@Nonnull final Locale locale) throws MavenReportException {
         getLog().debug("Facepalm report generation output directory: " + outputDirectory.getAbsolutePath());
 
         // Resolve findings file relative to reporting output directory.
-        File resultsFile = outputDirectory.toPath().resolve("..").resolve("facepalm-findings.json").normalize().toFile();
+        final var resultsFile = outputDirectory.toPath().resolve("..").resolve("facepalm-findings.json").normalize().toFile();
 
         if (!resultsFile.exists()) {
             getLog().warn("Facepalm results not found at " + resultsFile.getAbsolutePath() +
@@ -64,7 +64,7 @@ public class FacepalmReportMojo extends AbstractMavenReport {
             return;
         }
 
-        List<FindingReport> findings;
+        final List<FindingReport> findings;
         try {
             final var mapper = new ObjectMapper();
             // Deserialize findings from the machine-readable JSON format.
@@ -83,7 +83,7 @@ public class FacepalmReportMojo extends AbstractMavenReport {
     /**
      * Renders findings into structured HTML via the Doxia Sink API.
      */
-    private void renderReport(List<FindingReport> findings) {
+    private void renderReport(@Nonnull final List<FindingReport> findings) {
         final var sink = getSink();
 
         // Apply descending sort by threat score.
@@ -146,7 +146,7 @@ public class FacepalmReportMojo extends AbstractMavenReport {
             sink.tableRow_();
 
             // Populate Table Rows
-            for (FindingReport finding : findings) {
+            for (final var finding : findings) {
                 sink.tableRow();
 
                 // Severity Column with High-risk emphasis
@@ -207,7 +207,7 @@ public class FacepalmReportMojo extends AbstractMavenReport {
      * Renders a placeholder message if scan data is missing.
      */
     private void renderEmptyReport() {
-        org.apache.maven.doxia.sink.Sink sink = getSink();
+        final var sink = getSink();
         sink.head();
         sink.title();
         sink.text("Facepalm Scan Results");

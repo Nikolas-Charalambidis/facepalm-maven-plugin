@@ -50,8 +50,8 @@ class EntropyEvaluator implements FindingEvaluator {
             freq.merge(ch, 1, Integer::sum);
         }
         var entropy = 0.0;
-        for (int count : freq.values()) {
-            double p = (double) count / string.length();
+        for (final int count : freq.values()) {
+            final double p = (double) count / string.length();
             entropy -= p * (Math.log(p) / Math.log(2));
         }
         return entropy;

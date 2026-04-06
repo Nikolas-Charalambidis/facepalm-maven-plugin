@@ -1,5 +1,6 @@
 package dev.nichar.facepalm.engine.extractor;
 
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -30,6 +31,7 @@ public class RegexSecretExtractor implements SecretExtractor {
     @Inject
     private FacepalmConfig config;
 
+    @Nonnull
     @Override
     public List<Finding> extract(@Nonnull final FileContext context) {
         final List<Finding> findings = new ArrayList<>();
@@ -56,7 +58,7 @@ public class RegexSecretExtractor implements SecretExtractor {
         }
 
         // Multi-Line Block Scanning (e.g., PEM certificates).
-        for (SecretPattern sp : activePatterns) {
+        for (final var sp : activePatterns) {
             if (!sp.isMultiLine()) {
                 continue;
             }
@@ -118,7 +120,7 @@ public class RegexSecretExtractor implements SecretExtractor {
     private String hashString(@Nonnull final String input) {
         try {
             final var messageDigest = MessageDigest.getInstance("SHA-256");
-            final var hash = messageDigest.digest(input.getBytes());
+            final var hash = messageDigest.digest(input.getBytes(StandardCharsets.UTF_8));
             final var hexString = new StringBuilder();
             for (final var b : hash) {
                 hexString.append(String.format("%02x", b));

@@ -102,7 +102,7 @@ public class ScannerEngine {
             }
 
             final List<Finding> allFindings = new ArrayList<>();
-            for (int i = 0; i < tasks.size(); i++) {
+            for (final Callable<List<Finding>> ignored : tasks) {
                 try {
                     allFindings.addAll(service.take().get());
                 } catch (Exception e) {

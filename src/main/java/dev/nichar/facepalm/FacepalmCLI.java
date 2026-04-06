@@ -25,7 +25,7 @@ import java.nio.file.Paths;
 
 
 /**
- * Command-line interface for running Facepalm scans outside of the Maven lifecycle.
+ * Command-line interface for running Facepalm scans outside the Maven lifecycle.
  */
 public class FacepalmCLI {
 

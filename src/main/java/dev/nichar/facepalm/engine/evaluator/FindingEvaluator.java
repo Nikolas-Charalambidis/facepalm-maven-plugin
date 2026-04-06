@@ -11,6 +11,7 @@ import dev.nichar.facepalm.engine.Finding;
  * Interface for components that refine discovery findings.
  * Implementations analyze the file context to adjust risk and confidence scores.
  */
+@FunctionalInterface
 public interface FindingEvaluator {
 
     /**

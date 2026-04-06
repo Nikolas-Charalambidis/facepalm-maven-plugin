@@ -36,7 +36,7 @@ public class FileContext {
      * Returns the line at the specified index, or an empty string if out of bounds.
      */
     @Nonnull
-    public String getLineOrEmpty(int index) {
+    public String getLineOrEmpty(final int index) {
         return (index >= 0 && index < lines.size()) ? lines.get(index) : "";
     }
 }

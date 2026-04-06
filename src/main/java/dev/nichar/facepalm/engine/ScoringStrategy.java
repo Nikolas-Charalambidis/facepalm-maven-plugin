@@ -9,7 +9,9 @@ public enum ScoringStrategy {
      * Arithmetic mean for a balanced, linear score.
      */
     AVERAGE {
-        public double calculate(int r, int c) {
+
+        @Override
+        public double calculate(final int r, final int c) {
             return (r + c) / 2.0;
         }
     },
@@ -18,7 +20,9 @@ public enum ScoringStrategy {
      * Geometric mean that heavily discounts findings with low individual scores.
      */
     GEOMETRIC {
-        public double calculate(int r, int c) {
+
+        @Override
+        public double calculate(final int r, final int c) {
             return Math.sqrt(r * (double) c);
         }
     },
@@ -27,7 +31,9 @@ public enum ScoringStrategy {
      * Quadratic mean that emphasizes higher values to surface critical findings.
      */
     ROOT_MEAN_SQUARE {
-        public double calculate(int r, int c) {
+
+        @Override
+        public double calculate(final int r, final int c) {
             return Math.sqrt((r * r + c * c) / 2.0);
         }
     },
@@ -36,8 +42,10 @@ public enum ScoringStrategy {
      * Weights the square of the risk score to prioritize extreme threats.
      */
     WEIGHTED_QUADRATIC {
-        public double calculate(int r, int c) {
-            double rScaled = (r * r) / 100.0;
+
+        @Override
+        public double calculate(final int r, final int c) {
+            final double rScaled = (r * r) / 100.0;
             return (rScaled * 0.8) + (c * 0.2);
         }
     },
@@ -46,7 +54,9 @@ public enum ScoringStrategy {
      * Returns the maximum score for critical risks; otherwise applies a balanced split.
      */
     GATEKEEPER {
-        public double calculate(int r, int c) {
+
+        @Override
+        public double calculate(final int r, final int c) {
             if (r >= 90) {
                 return Math.max(r, c);
             }

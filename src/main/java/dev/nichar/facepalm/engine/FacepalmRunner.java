@@ -63,8 +63,8 @@ public class FacepalmRunner {
         getLog().info("Scanning " + root);
 
         gitIgnoreService.loadAllGitIgnores(root);
-        List<Finding> findings = engine.scan(root);
-        ScanStatistics stats = engine.getStats();
+        final var findings = engine.scan(root);
+        final var stats = engine.getStats();
 
         reporter.printLogs(stats, findings);
 
@@ -82,7 +82,7 @@ public class FacepalmRunner {
     /**
      * Serializes findings to a machine-readable JSON format for the reporting phase.
      */
-    private void saveFindingsToJson(List<Finding> findings, File outputFile) throws Exception {
+    private void saveFindingsToJson(@Nonnull final List<Finding> findings, @Nonnull final File outputFile) throws Exception {
         if (!outputFile.getParentFile().exists()) {
             outputFile.getParentFile().mkdirs();
         }
@@ -98,7 +98,8 @@ public class FacepalmRunner {
     /**
      * Maps a raw scan finding to a serializable DTO.
      */
-    public FindingReport mapToDto(Finding finding, ScoringConfig config) {
+    @Nonnull
+    public FindingReport mapToDto(@Nonnull final Finding finding, @Nonnull final ScoringConfig config) {
         return FindingReport.builder()
             .patternName(finding.getPatternName())
             .fileAbsolutePath(finding.getContext().getPath().toAbsolutePath().toString())
@@ -115,7 +116,7 @@ public class FacepalmRunner {
     /**
      * Terminates the build if findings exceed configured threat thresholds.
      */
-    private void checkFailureConditions(long errors, long warnings) throws MojoFailureException {
+    private void checkFailureConditions(final long errors, final long warnings) throws MojoFailureException {
         final var scoring = context.getScoring();
         if (!scoring.isFailOnError() && scoring.isFailOnWarnings()) {
             getLog().warn("Unusual configuration: failOnError=false with failOnWarnings=true");

@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Stream;
 
@@ -33,7 +34,7 @@ public class GitIgnoreService {
     /**
      * Map of directory paths to their compiled glob matchers.
      */
-    private final TreeMap<Path, List<PathMatcher>> registry = new TreeMap<>();
+    private final Map<Path, List<PathMatcher>> registry = new TreeMap<>();
 
     @Inject
     public GitIgnoreService(@Nullable final Log log) {
@@ -44,8 +45,8 @@ public class GitIgnoreService {
      * Discovers and parses all {@code .gitignore} files within the target project.
      */
     public void loadAllGitIgnores(@Nonnull final Path root) {
-        try (Stream<Path> paths = Files.walk(root)) {
-            paths.filter(p -> p.getFileName() != null && p.getFileName().toString().equals(".gitignore"))
+        try (var paths = Files.walk(root)) {
+            paths.filter(p -> p.getFileName() != null && ".gitignore".equals(p.getFileName().toString()))
                 .forEach(this::parseGitIgnoreFile);
         } catch (IOException e) {
             log.warn("Error walking for .gitignores: " + e.getMessage());

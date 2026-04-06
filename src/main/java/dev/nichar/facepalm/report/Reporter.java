@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.stream.Collectors;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -55,7 +56,7 @@ public class Reporter {
     private final Configuration cfg;
 
     @Inject
-    public Reporter(@Nullable Log log, FacepalmConfig context) {
+    public Reporter(@Nullable final Log log, @Nonnull final FacepalmConfig context) {
         this.log = log != null ? log : new org.apache.maven.plugin.logging.SystemStreamLog();
         cfg = new Configuration(Configuration.VERSION_2_3_32);
         cfg.setClassForTemplateLoading(Reporter.class, "/templates");
@@ -70,12 +71,13 @@ public class Reporter {
      * Executes the full reporting pipeline, including console logs and file generation.
      */
     @SuppressWarnings("unused") // TODO: SARIF + HTML reporting.
-    public void performReporting(List<Finding> findings,
-                                 ScanStatistics stats,
-                                 String rootPath,
-                                 String version,
-                                 Path outputPathBase) throws Exception {
-        ScanReport report = buildReport(findings, stats, rootPath, version);
+    public void performReporting(@Nonnull final List<Finding> findings,
+                                 @Nonnull final ScanStatistics stats,
+                                 @Nonnull final String rootPath,
+                                 @Nonnull final String version,
+                                 @Nonnull final Path outputPathBase) throws Exception {
+
+        final var report = buildReport(findings, stats, rootPath, version);
         generateHtml(report, outputPathBase.resolve("facepalm-report.html"));
         generateSarif(report, outputPathBase.resolve("facepalm-report.sarif").toFile());
     }
@@ -83,13 +85,13 @@ public class Reporter {
     /**
      * Generates an HTML report using Freemarker templates.
      */
-    public void generateHtml(ScanReport report, Path outputPath) throws Exception {
-        Template temp = cfg.getTemplate("report.html.ftl");
-        File outputFile = outputPath.toFile();
+    public void generateHtml(@Nonnull final ScanReport report, @Nonnull final Path outputPath) throws Exception {
+        final var temp = cfg.getTemplate("report.html.ftl");
+        final var outputFile = outputPath.toFile();
         if (outputFile.getParentFile() != null) {
             outputFile.getParentFile().mkdirs();
         }
-        try (Writer out = new OutputStreamWriter(new FileOutputStream(outputFile), StandardCharsets.UTF_8)) {
+        try (final var out = new OutputStreamWriter(new FileOutputStream(outputFile), StandardCharsets.UTF_8)) {
             temp.process(report, out);
         }
         if (context.getScoring().isShowDetails()) {
@@ -100,33 +102,33 @@ public class Reporter {
     /**
      * Generates a SARIF report for integration with standard security analysis tools.
      */
-    public void generateSarif(ScanReport report, File outputFile) throws Exception {
-        ObjectMapper mapper = new ObjectMapper();
-        ObjectNode sarif = mapper.createObjectNode();
+    public void generateSarif(@Nonnull final ScanReport report, @Nonnull final File outputFile) throws Exception {
+        final var mapper = new ObjectMapper();
+        final var sarif = mapper.createObjectNode();
         sarif.put("$schema", "https://schemastore.azurewebsites.net/schemas/json/sarif-2.1.0-rtm.5.json");
         sarif.put("version", "2.1.0");
 
-        ArrayNode runs = sarif.putArray("runs");
-        ObjectNode run = runs.addObject();
+        final var runs = sarif.putArray("runs");
+        final var run = runs.addObject();
 
-        ObjectNode tool = run.putObject("tool");
-        ObjectNode driver = tool.putObject("driver");
+        final var tool = run.putObject("tool");
+        final var driver = tool.putObject("driver");
         driver.put("name", "Facepalm");
         driver.put("version", report.getMetadata().getScannerVersion());
 
-        ArrayNode results = run.putArray("results");
-        for (ScanReport.UniqueLeak leak : report.getLeaks()) {
-            for (ScanReport.Occurrence occ : leak.getOccurrences()) {
-                ObjectNode result = results.addObject();
+        final var results = run.putArray("results");
+        for (final var leak : report.getLeaks()) {
+            for (final var occ : leak.getOccurrences()) {
+                final var result = results.addObject();
                 result.put("ruleId", leak.getPrimaryRuleId());
                 result.put("level", leak.getTotalRisk() > 80 ? "error" : "warning");
 
-                ObjectNode message = result.putObject("message");
+                final var message = result.putObject("message");
                 message.put("text", "Secret detected: " + leak.getSecret());
 
-                ArrayNode locations = result.putArray("locations");
-                ObjectNode loc = locations.addObject();
-                ObjectNode phys = loc.putObject("physicalLocation");
+                final var locations = result.putArray("locations");
+                final var loc = locations.addObject();
+                final var phys = loc.putObject("physicalLocation");
                 phys.putObject("artifactLocation").put("uri", occ.getRelativePath().replace("\\", "/"));
                 phys.putObject("region").put("startLine", occ.getLineNumber());
             }
@@ -140,22 +142,23 @@ public class Reporter {
     /**
      * Aggregates raw discovery findings into a structured report model.
      */
-    public ScanReport buildReport(List<Finding> findings,
-                                  ScanStatistics stats,
-                                  String rootPath,
-                                  String version) {
+    @Nonnull
+    public ScanReport buildReport(@Nonnull final List<Finding> findings,
+                                  @Nonnull final ScanStatistics stats,
+                                  @Nonnull final String rootPath,
+                                  @Nonnull final String version) {
         // Group findings by unique secret fingerprints for deduplicated reporting.
-        Map<String, List<Finding>> grouped = findings.stream()
+        final var grouped = findings.stream()
             .collect(Collectors.groupingBy(f ->
-                Base64.getEncoder().encodeToString((f.getPatternName() + ":" + f.getMaskedSecret()).getBytes())
+                Base64.getEncoder().encodeToString((f.getPatternName() + ":" + f.getMaskedSecret()).getBytes(StandardCharsets.UTF_8))
             ));
 
-        Map<String, ScanReport.RuleDefinition> ruleDict = new HashMap<>();
+        final var ruleDict = new HashMap<String, ScanReport.RuleDefinition>();
 
-        List<ScanReport.UniqueLeak> leaks = grouped.entrySet().stream().map(entry -> {
-                String fingerprint = entry.getKey();
-                List<Finding> occs = entry.getValue();
-                Finding primary = occs.get(0);
+        final var leaks = grouped.entrySet().stream().map(entry -> {
+                final var fingerprint = entry.getKey();
+                final var occs = entry.getValue();
+                final var primary = occs.get(0);
 
                 // Initialize metadata for the primary detection pattern.
                 ruleDict.putIfAbsent(
@@ -208,7 +211,7 @@ public class Reporter {
     /**
      * Logs discovery findings and scan statistics to the Maven console.
      */
-    public void printLogs(ScanStatistics stats, List<Finding> findings) {
+    public void printLogs(@Nonnull final ScanStatistics stats, @Nonnull final List<Finding> findings) {
         final var scoringConfig = context.getScoring();
 
         if (scoringConfig.isShowScoring()) {
@@ -217,9 +220,9 @@ public class Reporter {
                 .filter(f -> f.getSeverity(scoringConfig) != Severity.INFO)
                 .sorted(Comparator.comparing(Finding::getNumericScore).reversed())
                 .forEach(f -> {
-                    Severity sev = f.getSeverity(scoringConfig);
+                    final var sev = f.getSeverity(scoringConfig);
 
-                    String message = String.format(
+                    final var message = String.format(
                         "[%s] Score: %.1f (R:%d/C:%d) - %s",
                         f.getPatternName(), f.getNumericScore(),
                         f.getRiskScore(), f.getConfidenceScore(),
@@ -237,9 +240,9 @@ public class Reporter {
                 });
         }
 
-        long info = findings.stream().filter(f -> f.getSeverity(scoringConfig) == Severity.INFO).count();
-        long errors = findings.stream().filter(f -> f.getSeverity(scoringConfig) == Severity.ERROR).count();
-        long warnings = findings.stream().filter(f -> f.getSeverity(scoringConfig) == Severity.WARNING).count();
+        final long info = findings.stream().filter(f -> f.getSeverity(scoringConfig) == Severity.INFO).count();
+        final long errors = findings.stream().filter(f -> f.getSeverity(scoringConfig) == Severity.ERROR).count();
+        final long warnings = findings.stream().filter(f -> f.getSeverity(scoringConfig) == Severity.WARNING).count();
 
         // Emit summary statistics if verbose detail is enabled.
         if (scoringConfig.isShowDetails()) {
@@ -262,7 +265,7 @@ public class Reporter {
 
         log.info(SEPARATOR);
 
-        String statusMessage;
+        final String statusMessage;
         if (errors > 0) {
             statusMessage = "High-risk issues detected! Action required.";
         } else if (warnings > 0) {
@@ -286,9 +289,5 @@ public class Reporter {
         log.info("SCAN RESULT : " + scanResult);
         log.info(SEPARATOR);
         log.info(statusMessage);
-    }
-
-    private String formatDuration(long millis) {
-        return String.format("%.3f s", millis / 1000.0);
     }
 }

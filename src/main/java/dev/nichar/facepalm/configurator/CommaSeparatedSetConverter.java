@@ -59,7 +59,7 @@ public class CommaSeparatedSetConverter extends AbstractConfigurationConverter {
         // Fallback: process traditional nested XML configuration tags.
         if (configuration.getChildCount() > 0) {
             final var set = new LinkedHashSet<>();
-            for (var child : configuration.getChildren()) {
+            for (final var child : configuration.getChildren()) {
                 try {
                     final var evaluatedChild = expressionEvaluator.evaluate(child.getValue());
                     if (evaluatedChild != null) {

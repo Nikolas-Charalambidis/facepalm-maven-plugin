@@ -11,6 +11,7 @@ import dev.nichar.facepalm.engine.Finding;
 /**
  * Interface for components that identify potential secrets within file content.
  */
+@FunctionalInterface
 public interface SecretExtractor {
 
     /**

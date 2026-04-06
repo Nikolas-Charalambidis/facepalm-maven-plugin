@@ -3,6 +3,8 @@ package dev.nichar.facepalm.engine;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.annotation.Nonnull;
+
 import dev.nichar.facepalm.config.ScoringConfig;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -48,7 +50,7 @@ public class Finding {
     /**
      * Updates threat scores and records the rule responsible for the adjustment.
      */
-    public void log(String rule, int rDelta, int cDelta) {
+    public void log(@Nonnull final String rule, final int rDelta, final int cDelta) {
         riskScore = Math.max(0, Math.min(100, riskScore + rDelta));
         confidenceScore = Math.max(0, Math.min(100, confidenceScore + cDelta));
         scoreHistory.add(String.format("%s (%+d/%+d)", rule, rDelta, cDelta));
@@ -57,8 +59,9 @@ public class Finding {
     /**
      * Resolves the finding's severity based on configured threat thresholds.
      */
-    public Severity getSeverity(ScoringConfig config) {
-        double score = getNumericScore();
+    @Nonnull
+    public Severity getSeverity(@Nonnull final ScoringConfig config) {
+        final double score = getNumericScore();
         if (score >= config.getErrorThreshold()) {
             return Severity.ERROR;
         }
@@ -78,6 +81,7 @@ public class Finding {
     /**
      * Returns a masked version of the secret for safe logging and reporting.
      */
+    @Nonnull
     public String getMaskedSecret() {
         return secretValue.length() <= 8 ? "****" : secretValue.substring(0, 4) + "..." + secretValue.substring(secretValue.length() - 4);
     }

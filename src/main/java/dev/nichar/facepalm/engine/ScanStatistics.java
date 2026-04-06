@@ -1,6 +1,7 @@
 package dev.nichar.facepalm.engine;
 
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.LongAdder;
 
@@ -31,12 +32,12 @@ public class ScanStatistics {
     /**
      * Distribution of scanned files by extension.
      */
-    private final ConcurrentHashMap<String, LongAdder> suffixCounts = new ConcurrentHashMap<>();
+    private final Map<String, LongAdder> suffixCounts = new ConcurrentHashMap<>();
 
     /**
      * Frequency of file exclusions grouped by reason.
      */
-    private final ConcurrentHashMap<ExclusionReason, LongAdder> exclusionBreakdown = new ConcurrentHashMap<>();
+    private final Map<ExclusionReason, LongAdder> exclusionBreakdown = new ConcurrentHashMap<>();
 
     /**
      * Increments the total file discovery count.
@@ -59,7 +60,7 @@ public class ScanStatistics {
     /**
      * Logs a file exclusion and the associated reason.
      */
-    public void recordExclusion(ExclusionReason reason) {
+    public void recordExclusion(@Nonnull final ExclusionReason reason) {
         exclusionBreakdown.computeIfAbsent(reason, k -> new LongAdder()).increment();
     }
 

@@ -337,17 +337,10 @@
                 <version>3.28.0</version>
             </plugin>
 
-            <!-- Unit tests -->
+            <!-- Unit tests and integration tests. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-report-plugin</artifactId>
-                <version>3.2.5</version>
-            </plugin>
-
-            <!-- Integration tests -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-failsafe-report-plugin</artifactId>
                 <version>3.2.5</version>
             </plugin>
 

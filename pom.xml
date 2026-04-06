@@ -29,6 +29,7 @@
         <com.soebes.itf.version>0.13.1</com.soebes.itf.version>
         <jakarta.annotation.version>3.0.0</jakarta.annotation.version>
         <javax.inject.version>1</javax.inject.version>
+        <org.apache.maven.checkstyle.version>3.6.0</org.apache.maven.checkstyle.version>
     </properties>
 
     <dependencies>
@@ -42,11 +43,14 @@
         </dependency>
 
         <dependency>
+            <!-- Maven reporting API. -->
             <groupId>org.apache.maven.reporting</groupId>
             <artifactId>maven-reporting-api</artifactId>
             <version>${org.apache.maven.reporting-api.version}</version>
         </dependency>
+
         <dependency>
+            <!-- Provies AbstractMavenReport for reporting. -->
             <groupId>org.apache.maven.reporting</groupId>
             <artifactId>maven-reporting-impl</artifactId>
             <version>${org.apache.maven.reporting-impl.version}</version>
@@ -260,6 +264,31 @@
                     <useDefaultDelimiters>true</useDefaultDelimiters>
                 </configuration>
             </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-pmd-plugin</artifactId>
+                <version>3.28.0</version>
+                <executions>
+                    <execution>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <failOnViolation>true</failOnViolation>
+                    <rulesets>
+                        <ruleset>pmd-ruleset.xml</ruleset>
+                    </rulesets>
+                    <excludes>
+                        <exclude>
+                            UseExplicitTypes
+                        </exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
         </plugins>
 
         <!-- Contains "dummy" projects for Integration Tests. -->
@@ -271,4 +300,50 @@
             </testResource>
         </testResources>
     </build>
+
+    <reporting>
+        <plugins>
+            <!-- PMD -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-pmd-plugin</artifactId>
+                <version>3.28.0</version>
+            </plugin>
+
+            <!-- Unit tests -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-report-plugin</artifactId>
+                <version>3.2.5</version>
+            </plugin>
+
+            <!-- Integration tests -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-report-plugin</artifactId>
+                <version>3.2.5</version>
+            </plugin>
+
+            <!-- Coverage -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.11</version>
+                <reportSets>
+                    <reportSet>
+                        <reports>
+                            <report>report</report>
+                        </reports>
+                    </reportSet>
+                </reportSets>
+            </plugin>
+
+            <!-- Source browsing -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jxr-plugin</artifactId>
+                <version>3.3.0</version>
+            </plugin>
+        </plugins>
+    </reporting>
 </project>

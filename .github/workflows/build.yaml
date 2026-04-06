@@ -1,18 +1,19 @@
-name: Build & Verify
+name: Build & Site
 
 on:
   push:
     branches: [ master ]
   pull_request:
     branches: [ master ]
-  workflow_dispatch: # Allows to trigger a test run manually.
+  workflow_dispatch: # Manual trigger.
 
 jobs:
-  build:
-    name: Build & Quality Gate
+  ci:
+    name: CI / Verify
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Setup Java 17
         uses: actions/setup-java@v4
@@ -21,13 +22,37 @@ jobs:
           java-version: '17'
           cache: 'maven'
 
-      # Run jxr here so the PMD report in the artifacts has working links.
-      - name: Build and Test
-        run: mvn -B clean jxr:jxr verify
+      - name: Build & Verify
+        run: mvn -B clean verify
 
-      - name: Upload Analysis Reports
+      - name: Upload Report Artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: pmd-reports-${{ github.event.pull_request.number || 'master' }}
+          name: reports
+          path: |
+            target/pmd.xml
+            target/failsafe-reports
+
+  site:
+    name: Generate & Upload Site
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master' # Master branch only.
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Build & Generate Site
+        run: mvn -B clean verify site
+
+      - name: Upload Site Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: site
           path: target/site

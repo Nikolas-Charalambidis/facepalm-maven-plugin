@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   ci:
-    name: CI / Verify
+    name: CI / Verify & Build Site
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -27,51 +27,33 @@ jobs:
           java-version: '17'
           cache: 'maven'
 
-      - name: Build & Verify
-        run: mvn -B clean verify
+      # We combined `verify` and `site` into one fast sequential command.
+      # Because Maven naturally fails fast, if `verify` fails (e.g., test fails, PMD fails Priority 1/2, Spotless check fails),
+      # the pipeline completely aborts, and the slow `site` generation phase NEVER RUNS.
+      # This guarantees quick error feedback for PRs, while generating the site organically if the build succeeds.
+      - name: Build, Verify, & Generate Site
+        run: mvn -B clean verify site
 
-      - name: Upload Report Artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: maven-reports
-          path: |
-            target/surefire-reports/*.xml
-            target/failsafe-reports/*.xml
-            target/pmd.xml
-
-  site:
-    name: Generate & Deploy Site
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'  # Master branch only.
-    needs: ci # It requires artifacts from the "ci" job to be downloaded and used for site report.
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Java 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-          cache: 'maven'
-
-      - name: Download Reports from CI
-        uses: actions/download-artifact@v4
-        with:
-          name: maven-reports
-          path: target/ # Downloads the files back into the target directory.
-
-      - name: Generate Site
-        # -DskipTests prevents re-running tests.
-        # The site plugin will now find the XMLs in target/ and generate HTML from them.
-        run: mvn site -DskipTests
-
+      # We don't need to manually upload raw XMLs anymore since Maven Site built the HTML locally in the step above.
+      # Upload the final HTML pages artifact immediately.
       - name: Upload Pages Artifact
+        if: github.ref == 'refs/heads/master' && success() # CRITICAL: Only upload the site artifact if on master and the build passed.
         uses: actions/upload-pages-artifact@v3
         with:
           path: target/site
 
+  # This job is now PURELY for deployment, not generation.
+  # We do not need to set up Java or parse XMLs here. It just grabs the artifact and pushes it.
+  site:
+    name: Deploy Site to GitHub Pages
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master' # Master branch only.
+    needs: ci # It requires artifacts from the "ci" job to be downloaded and used for site report.
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
+        # This automatically pulls the artifact uploaded by 'actions/upload-pages-artifact' in the CI job.
         uses: actions/deploy-pages@v4

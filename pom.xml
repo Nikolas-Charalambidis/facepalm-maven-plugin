@@ -23,7 +23,7 @@
 
     <developers>
         <developer>
-            <id>nichar</id>
+            <id>nikolas-charalambidis</id>
             <name>Nikolas Charalambidis</name>
             <email>nikolas.charalambidis@gmail.com</email>
             <url>https://nikolas-charalambidis.com</url>
@@ -41,22 +41,32 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
 
-        <org.apache.maven.version>3.9.12</org.apache.maven.version>
-        <org.apache.maven.reporting-api.version>3.1.1</org.apache.maven.reporting-api.version>
-        <org.apache.maven.reporting-impl.version>3.2.0</org.apache.maven.reporting-impl.version>
-        <org.apache.maven.plugin-tools.version>3.11.0</org.apache.maven.plugin-tools.version>
-        <org.apache.maven.failsafe-plugin.version>3.2.5</org.apache.maven.failsafe-plugin.version>
-        <org.apache.maven.resources-plugin.version>3.3.1</org.apache.maven.resources-plugin.version>
-        <org.projectlombok.version>1.18.30</org.projectlombok.version>
-        <org.freemarker.version>2.3.32</org.freemarker.version>
-        <com.fasterxml.jackson.version>2.21.2</com.fasterxml.jackson.version>
-        <com.google.inject.guice.version>5.1.0</com.google.inject.guice.version>
-        <com.google.guava.version>33.5.0-jre</com.google.guava.version>
-        <org.eclipse.sisu.version>0.9.0.M2</org.eclipse.sisu.version>
-        <com.soebes.itf.version>0.13.1</com.soebes.itf.version>
-        <jakarta.annotation.version>3.0.0</jakarta.annotation.version>
+        <maven-plugin-api.version>3.9.12</maven-plugin-api.version>
+        <maven-reporting-api.version>3.1.1</maven-reporting-api.version>
+        <maven-reporting-impl.version>3.2.0</maven-reporting-impl.version>
+        <guava.version>33.5.0-jre</guava.version>
+        <maven-plugin-annotations.version>3.11.0</maven-plugin-annotations.version>
+        <lombok.version>1.18.30</lombok.version>
+        <freemarker.version>2.3.32</freemarker.version>
+        <jackson-databind.version>2.21.2</jackson-databind.version>
         <javax.inject.version>1</javax.inject.version>
-        <org.apache.maven.checkstyle.version>3.6.0</org.apache.maven.checkstyle.version>
+        <jakarta.annotation.version>3.0.0</jakarta.annotation.version>
+        <org.eclipse.sisu.inject.version>0.9.0.M2</org.eclipse.sisu.inject.version>
+        <itf.version>0.13.1</itf.version>
+        <guice.version>5.1.0</guice.version>
+
+        <!-- Plugins. -->
+        <jacoco-maven-plugin.version>0.8.11</jacoco-maven-plugin.version>
+        <maven-resources-plugin.version>3.3.1</maven-resources-plugin.version>
+        <sisu-maven-plugin.version>0.9.0.M2</sisu-maven-plugin.version>
+        <plexus-component-metadata.version>2.1.1</plexus-component-metadata.version>
+        <maven-plugin-plugin.version>3.11.0</maven-plugin-plugin.version>
+        <maven-failsafe-plugin.version>3.2.5</maven-failsafe-plugin.version>
+        <spotless-maven-plugin.version>2.44.0</spotless-maven-plugin.version>
+        <maven-pmd-plugin.version>3.28.0</maven-pmd-plugin.version>
+        <maven-jxr-plugin.version>3.3.0</maven-jxr-plugin.version>
+        <maven-javadoc-plugin.version>3.11.2</maven-javadoc-plugin.version>
+        <maven-surefire-report-plugin.version>3.2.5</maven-surefire-report-plugin.version>
     </properties>
 
     <dependencies>
@@ -64,7 +74,7 @@
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-plugin-api</artifactId>
-            <version>${org.apache.maven.version}</version>
+            <version>${maven-plugin-api.version}</version>
             <!-- Compile scope needed because plugin is also run via PSVM/CLI outside Maven runtime -->
             <scope>compile</scope>
         </dependency>
@@ -73,14 +83,14 @@
             <!-- Maven reporting API. -->
             <groupId>org.apache.maven.reporting</groupId>
             <artifactId>maven-reporting-api</artifactId>
-            <version>${org.apache.maven.reporting-api.version}</version>
+            <version>${maven-reporting-api.version}</version>
         </dependency>
 
         <dependency>
             <!-- Provies AbstractMavenReport for reporting. -->
             <groupId>org.apache.maven.reporting</groupId>
             <artifactId>maven-reporting-impl</artifactId>
-            <version>${org.apache.maven.reporting-impl.version}</version>
+            <version>${maven-reporting-impl.version}</version>
             <exclusions>
                 <exclusion>
                     <artifactId>org.eclipse.sisu.plexus</artifactId>
@@ -104,19 +114,20 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
         <dependency>
             <!-- Include a specific version as a replacement to the provided Guava version to mitigate a missing class exception. -->
             <!-- Caused by: java.lang.ClassNotFoundException: com.google.common.base.Stopwatch -->
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>${com.google.guava.version}</version>
+            <version>${guava.version}</version>
         </dependency>
 
         <!-- Provides @Mojo and @Parameter annotations for goals and provides metadata to generate the plugin.xml descriptor. -->
         <dependency>
             <groupId>org.apache.maven.plugin-tools</groupId>
             <artifactId>maven-plugin-annotations</artifactId>
-            <version>${org.apache.maven.plugin-tools.version}</version>
+            <version>${maven-plugin-annotations.version}</version>
             <!-- Bundling it causes runtime classpath conflicts. -->
             <scope>provided</scope>
         </dependency>
@@ -125,7 +136,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>${org.projectlombok.version}</version>
+            <version>${lombok.version}</version>
             <!-- Annotation processor. -->
             <scope>provided</scope>
         </dependency>
@@ -134,14 +145,14 @@
         <dependency>
             <groupId>org.freemarker</groupId>
             <artifactId>freemarker</artifactId>
-            <version>${org.freemarker.version}</version>
+            <version>${freemarker.version}</version>
         </dependency>
 
         <!-- Handles JSON output formats and data mapping. -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>${com.fasterxml.jackson.version}</version>
+            <version>${jackson-databind.version}</version>
         </dependency>
 
         <!-- Standard JSR-330 annotations for dependency injection. -->
@@ -164,7 +175,7 @@
         <dependency>
             <groupId>org.eclipse.sisu</groupId>
             <artifactId>org.eclipse.sisu.inject</artifactId>
-            <version>${org.eclipse.sisu.version}</version>
+            <version>${org.eclipse.sisu.inject.version}</version>
             <!-- Compile scope required so dependency is available at runtime when running CLI/PSVM from IDE. -->
             <scope>compile</scope>
         </dependency>
@@ -173,7 +184,7 @@
         <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
-            <version>${com.google.inject.guice.version}</version>
+            <version>${guice.version}</version>
             <exclusions>
                 <exclusion>
                     <artifactId>guava</artifactId>
@@ -186,7 +197,7 @@
         <dependency>
             <groupId>com.soebes.itf.jupiter.extension</groupId>
             <artifactId>itf-jupiter-extension</artifactId>
-            <version>${com.soebes.itf.version}</version>
+            <version>${itf.version}</version>
             <!-- Integration testing only. -->
             <scope>test</scope>
             <exclusions>
@@ -203,7 +214,7 @@
         <dependency>
             <groupId>com.soebes.itf.jupiter.extension</groupId>
             <artifactId>itf-assertj</artifactId>
-            <version>${com.soebes.itf.version}</version>
+            <version>${itf.version}</version>
             <!-- Integration testing only. -->
             <scope>test</scope>
         </dependency>
@@ -211,14 +222,44 @@
 
     <build>
         <plugins>
-            <!--- Indexes @Named components: Allows Sisu to discover your scanner components without slow reflection at runtime. -->
+            <!-- Attaches a Java agent to the JVM during testing to track which lines of code are executed for coverage analysis. -->
+            <!-- Phase: initialize (default) - it must run before the tests start to set up the necessary environment properties. -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco-maven-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <!-- Generates the property (argLine) that tells the Surefire/Failsafe plugins how to record test coverage data. -->
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Copies project resources to the output directory while optionally replacing placeholders with actual property values. -->
+            <!-- Phase: process-resources (default) - Occurs before compilation to ensure properties are injected into configuration files. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>${maven-resources-plugin.version}</version>
+                <configuration>
+                    <!-- Enables the standard ${...} and @...@ syntax for property substitution in the resource files. -->
+                    <useDefaultDelimiters>true</useDefaultDelimiters>
+                </configuration>
+            </plugin>
+
+            <!-- Indexes JSR-330 (@Named, @Inject) components into a classpath index file to enable fast, reflection-free discovery by the Sisu container. -->
+            <!-- Phase: process-classes - It processes the compiled classes to generate the META-INF/sisu/javax.inject.Named index. -->
             <plugin>
                 <groupId>org.eclipse.sisu</groupId>
                 <artifactId>sisu-maven-plugin</artifactId>
-                <version>${org.eclipse.sisu.version}</version>
+                <version>${sisu-maven-plugin.version}</version>
                 <executions>
                     <execution>
-                        <id>generate-index</id>
+                        <id>generate-main-index</id>
                         <goals>
                             <goal>main-index</goal>
                         </goals>
@@ -226,17 +267,12 @@
                 </executions>
             </plugin>
 
-            <!-- Descriptor Generation: Automatically generates the plugin.xml file required for Maven to recognize your goals. -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-plugin-plugin</artifactId>
-                <version>${org.apache.maven.plugin-tools.version}</version>
-            </plugin>
-
+            <!-- Generates metadata descriptors for Plexus components used in older Maven container architectures. -->
+            <!-- Phase: process-classes - It runs right after the Java compiler finishes so it can inspect the bytecode. -->
             <plugin>
                 <groupId>org.codehaus.plexus</groupId>
                 <artifactId>plexus-component-metadata</artifactId>
-                <version>2.1.1</version>
+                <version>${plexus-component-metadata.version}</version>
                 <executions>
                     <execution>
                         <goals>
@@ -246,11 +282,20 @@
                 </executions>
             </plugin>
 
-            <!-- Test Preparation: Installs the plugin into a temporary local repository so integration tests run against the latest build. -->
+            <!-- Descriptor Generation: Automatically generates the plugin.xml file required for Maven to recognize the goals. -->
+            <!-- Phase: process-classes (default) - It scans compiled .class files to find component annotations. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-plugin-plugin</artifactId>
+                <version>${maven-plugin-plugin.version}</version>
+            </plugin>
+
+            <!-- Prepares integration tests by installing the current plugin version into a specialized, temporary local repository. -->
+            <!-- Phase: pre-integration-test — it runs right before the integration tests to ensure the test environment uses the latest build of the code. -->
             <plugin>
                 <groupId>com.soebes.itf.jupiter.extension</groupId>
                 <artifactId>itf-maven-plugin</artifactId>
-                <version>${com.soebes.itf.version}</version>
+                <version>${itf.version}</version>
                 <executions>
                     <execution>
                         <id>install-plugin</id>
@@ -261,14 +306,15 @@
                 </executions>
             </plugin>
 
-            <!-- Integration Testing. -->
+            <!-- Runs integration tests in an isolated environment to verify the plugin's behavior in a real Maven execution. -->
+            <!-- Phase: integration-test (for running) and verify (for checking results) - It ensures the build fails if integration tests don't pass. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
-                <version>${org.apache.maven.failsafe-plugin.version}</version>
+                <version>${maven-failsafe-plugin.version}</version>
                 <configuration>
                     <systemPropertyVariables>
-                        <!-- Passes maven.home to ensure the test runner uses the correct Maven binary. -->
+                        <!-- Explicitly passes the Maven path to the test JVM so the ITF framework can spawn Maven processes correctly. -->
                         <maven.home>${maven.home}</maven.home>
                     </systemPropertyVariables>
                 </configuration>
@@ -282,47 +328,88 @@
                 </executions>
             </plugin>
 
-            <!-- Property Filtering: Allows the use of ${} or @ delimiters to inject POM properties into report templates and test files. -->
+            <!-- Enforces consistent code style and license headers by checking or applying formatting rules defined in the configuration. -->
+            <!-- Phase: verify - It validates the formatting as a final quality gate before the build is considered successful. -->
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-resources-plugin</artifactId>
-                <version>${org.apache.maven.resources-plugin.version}</version>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>${spotless-maven-plugin.version}</version>
                 <configuration>
-                    <useDefaultDelimiters>true</useDefaultDelimiters>
+                    <java>
+                        <eclipse>
+                            <file>${project.basedir}/eclipse.xml</file>
+                        </eclipse>
+                        <licenseHeader>
+                            <file>${project.basedir}/license.header</file>
+                        </licenseHeader>
+                        <removeUnusedImports/>
+                        <importOrder/>
+                        <trimTrailingWhitespace/>
+                        <endWithNewline/>
+                    </java>
                 </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-pmd-plugin</artifactId>
-                <version>3.28.0</version>
                 <executions>
                     <execution>
+                        <id>spotless-check</id>
                         <phase>verify</phase>
                         <goals>
+                            <!-- Ensures the build fails automatically if code is unformatted, while leaving spotless:apply as a manual command. -->
                             <goal>check</goal>
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+
+            <!-- Purpose: Performs both static analysis (flaws) and duplication detection (copy-paste) as a combined quality gate. -->
+            <!-- Phase: verify - Acts as a final quality gate to ensure the codebase meets structural standards before completing the build. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-pmd-plugin</artifactId>
+                <version>${maven-pmd-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <phase>verify</phase>
+                        <goals>
+                            <!-- Programming Mistake Detector (PMD). -->
+                            <goal>check</goal>
+                            <!-- Copy-paste Detector (CPD). -->
+                            <goal>cpd-check</goal>
+                        </goals>
+                    </execution>
+                </executions>
                 <configuration>
+                    <!-- Plugin: Instructs the plugin to print the specific details and source code locations of all violations that caused the build to fail directly into the console output. -->
+                    <printFailingErrors>true</printFailingErrors>
+                    <!-- Plugin: Enables cross-referencing between the PMD report and the JXR source code view for easier debugging of violations. -->
+                    <linkXRef>true</linkXRef>
+
+                    <!-- PMD: Forces the Maven build to stop and report a failure if any code violations are found that exceed failurePriority -->
                     <failOnViolation>true</failOnViolation>
+                    <!-- PMD: Configures the build to only fail for high-severity issues (Errors and Warnings), while allowing minor issues to pass through to the report. -->
+                    <failurePriority>2</failurePriority>
+                    <!-- PMD: Points the plugin to a specific XML file that contains the customized collection of coding rules and standards. -->
                     <rulesets>
                         <ruleset>pmd-ruleset.xml</ruleset>
                     </rulesets>
+                    <!-- PMD: Instructs the plugin to ignore a specific rule even if that rule is included in the active ruleset or the default configuration -->
                     <excludes>
-                        <exclude>
-                            UseExplicitTypes
-                        </exclude>
+                        <exclude>UseExplicitTypes</exclude>
                     </excludes>
+
+                    <!-- CPD: Sets the minimum length of a code fragment that the detector will flag as a duplicate. -->
+                    <minimumTokens>100</minimumTokens>
+                    <!-- CPD: Allows the detector to catch "hidden" copy-pasting by ignoring the specific names of variables and methods, focusing instead on the identical underlying logic and structure. -->
+                    <ignoreIdentifiers>true</ignoreIdentifiers>
                 </configuration>
             </plugin>
         </plugins>
 
-        <!-- Contains "dummy" projects for Integration Tests. -->
-        <!-- Filtering allows us to inject the current ${project.version} into their test POMs automatically. -->
+        <!-- Treats the "dummy" integration test projects as resources and processes them to replace Maven placeholders with actual build values. -->
+        <!-- Phase: process-test-resources - Occurs during the test preparation lifecycle before any tests are executed. -->
         <testResources>
             <testResource>
                 <directory>src/test/resources-its</directory>
+                <!-- Enables the injection of the plugin's current ${project.version} into the test project POMs so they always test against the built version. -->
                 <filtering>true</filtering>
             </testResource>
         </testResources>
@@ -330,25 +417,51 @@
 
     <reporting>
         <plugins>
-            <!-- PMD -->
+            <!-- Generates a cross-referenced, syntax-highlighted HTML version of the Java source code that allows other reports to link directly to specific lines. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jxr-plugin</artifactId>
+                <version>${maven-jxr-plugin.version}</version>
+            </plugin>
+
+            <!-- Generates HTML API documentation from the Java source code comments. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>${maven-javadoc-plugin.version}</version>
+                <configuration>
+                    <doclint>all,-missing</doclint> <detectLinks>true</detectLinks>
+                    <detectLinks>true</detectLinks>
+                    <detectJavaApiLink>true</detectJavaApiLink>
+                    <show>public</show>
+                </configuration>
+                <reportSets>
+                    <reportSet>
+                        <id>main-plugin-api</id>
+                        <configuration>
+                            <doctitle>${project.name} ${project.version} Plugin API</doctitle>
+                            <windowtitle>${project.artifactId} API</windowtitle>
+                            <description>Technical documentation for the plugin mojos and core logic.</description>
+                        </configuration>
+                        <reports>
+                            <report>javadoc</report>
+                        </reports>
+                    </reportSet>
+                </reportSets>
+            </plugin>
+
+            <!-- Generates a detailed HTML report of the static analysis findings, categorized by the rules violated in the source code. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-pmd-plugin</artifactId>
-                <version>3.28.0</version>
+                <version>${maven-pmd-plugin.version}</version>
             </plugin>
 
-            <!-- Unit tests and integration tests. -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-report-plugin</artifactId>
-                <version>3.2.5</version>
-            </plugin>
-
-            <!-- Coverage -->
+            <!-- Transforms the binary coverage data collected during the build into a visual HTML report showing which lines of code were actually tested. -->
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.11</version>
+                <version>${jacoco-maven-plugin.version}</version>
                 <reportSets>
                     <reportSet>
                         <reports>
@@ -358,11 +471,11 @@
                 </reportSets>
             </plugin>
 
-            <!-- Source browsing -->
+            <!-- Transforms the raw XML test results from Surefire and Failsafe into a human-readable HTML summary of passed, failed, and skipped tests. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jxr-plugin</artifactId>
-                <version>3.3.0</version>
+                <artifactId>maven-surefire-report-plugin</artifactId>
+                <version>${maven-surefire-report-plugin.version}</version>
             </plugin>
         </plugins>
     </reporting>

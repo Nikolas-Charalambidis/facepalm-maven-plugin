@@ -1,10 +1,14 @@
+/*
+ * Licensed under Apache-2.0.
+ * Copyright (c) 2026 Nikolas Charalambidis.
+ * All rights reserved.
+ */
+
 package dev.nichar.facepalm.pattern;
 
 import java.util.regex.Pattern;
-
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-
 
 /**
  * Data Transfer Object for a secret detection signature.

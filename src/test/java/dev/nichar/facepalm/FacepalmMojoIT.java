@@ -1,3 +1,9 @@
+/*
+ * Licensed under Apache-2.0.
+ * Copyright (c) 2026 Nikolas Charalambidis.
+ * All rights reserved.
+ */
+
 package dev.nichar.facepalm;
 
 import static com.soebes.itf.extension.assertj.MavenITAssertions.assertThat;
@@ -7,7 +13,6 @@ import com.soebes.itf.jupiter.extension.MavenJupiterExtension;
 import com.soebes.itf.jupiter.extension.MavenTest;
 import com.soebes.itf.jupiter.extension.MavenVerbose;
 import com.soebes.itf.jupiter.maven.MavenExecutionResult;
-
 
 /**
  * Integration tests for the Facepalm Maven Plugin.
@@ -59,7 +64,8 @@ class FacepalmMojoIT {
         assertThat(result).out().warn()
             .contains("[Generic Password Assignment] Score: 69.8 (R:85/C:60) - \uD83D\uDFE1");
         assertThat(result).out().info()
-            .anyMatch(line -> line.contains("facepalm-maven-plugin/target/maven-it/dev/nichar/facepalm/FacepalmMojoIT/dirty_project/project/src/main/resources/application.properties:2"));
+            .anyMatch(line -> line.contains(
+                "facepalm-maven-plugin/target/maven-it/dev/nichar/facepalm/FacepalmMojoIT/dirty_project/project/src/main/resources/application.properties:2"));
 
         assertThat(result).out().info()
             .contains("Discovered 5 files...")
@@ -87,7 +93,8 @@ class FacepalmMojoIT {
         assertThat(result).out().warn()
             .contains("[Generic Password Assignment] Score: 69.8 (R:85/C:60) - \uD83D\uDFE1");
         assertThat(result).out().info()
-            .anyMatch(line -> line.contains("facepalm-maven-plugin/target/maven-it/dev/nichar/facepalm/FacepalmMojoIT/dirty_project_fail_on_warnings/project/src/main/resources/application.properties:2"));
+            .anyMatch(line -> line.contains(
+                "facepalm-maven-plugin/target/maven-it/dev/nichar/facepalm/FacepalmMojoIT/dirty_project_fail_on_warnings/project/src/main/resources/application.properties:2"));
 
         assertThat(result).out().info()
             .contains("Discovered 5 files...")

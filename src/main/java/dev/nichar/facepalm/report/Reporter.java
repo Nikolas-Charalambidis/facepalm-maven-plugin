@@ -1,9 +1,24 @@
+/*
+ * Licensed under Apache-2.0.
+ * Copyright (c) 2026 Nikolas Charalambidis.
+ * All rights reserved.
+ */
+
 package dev.nichar.facepalm.report;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.nichar.facepalm.FacepalmConfig;
+import dev.nichar.facepalm.engine.Finding;
+import dev.nichar.facepalm.engine.ScanReport;
+import dev.nichar.facepalm.engine.ScanStatistics;
+import dev.nichar.facepalm.engine.Severity;
+import freemarker.template.Configuration;
+import freemarker.template.TemplateExceptionHandler;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
-import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -11,31 +26,12 @@ import java.util.Base64;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.stream.Collectors;
-
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-
 import org.apache.maven.plugin.logging.Log;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import dev.nichar.facepalm.FacepalmConfig;
-
-import dev.nichar.facepalm.engine.Finding;
-import dev.nichar.facepalm.engine.ScanReport;
-import dev.nichar.facepalm.engine.ScanStatistics;
-import dev.nichar.facepalm.engine.Severity;
-import freemarker.template.Configuration;
-import freemarker.template.Template;
-import freemarker.template.TemplateExceptionHandler;
-
 
 /**
  * Handles the generation of security reports and console logging.
@@ -149,43 +145,42 @@ public class Reporter {
                                   @Nonnull final String version) {
         // Group findings by unique secret fingerprints for deduplicated reporting.
         final var grouped = findings.stream()
-            .collect(Collectors.groupingBy(f ->
-                Base64.getEncoder().encodeToString((f.getPatternName() + ":" + f.getMaskedSecret()).getBytes(StandardCharsets.UTF_8))
-            ));
+            .collect(Collectors.groupingBy(f -> Base64.getEncoder().encodeToString((f.getPatternName() + ":" + f
+                .getMaskedSecret()).getBytes(StandardCharsets.UTF_8))));
 
         final var ruleDict = new HashMap<String, ScanReport.RuleDefinition>();
 
         final var leaks = grouped.entrySet().stream().map(entry -> {
-                final var fingerprint = entry.getKey();
-                final var occs = entry.getValue();
-                final var primary = occs.get(0);
+            final var fingerprint = entry.getKey();
+            final var occs = entry.getValue();
+            final var primary = occs.get(0);
 
-                // Initialize metadata for the primary detection pattern.
-                ruleDict.putIfAbsent(
-                    primary.getPatternName(), ScanReport.RuleDefinition.builder()
-                        .id(primary.getPatternName())
-                        .name(primary.getPatternName())
-                        .description("Automated detection for " + primary.getPatternName())
-                        .remediation("Revoke the secret immediately and update configuration.")
-                        .build());
+            // Initialize metadata for the primary detection pattern.
+            ruleDict.putIfAbsent(
+                primary.getPatternName(), ScanReport.RuleDefinition.builder()
+                    .id(primary.getPatternName())
+                    .name(primary.getPatternName())
+                    .description("Automated detection for " + primary.getPatternName())
+                    .remediation("Revoke the secret immediately and update configuration.")
+                    .build());
 
-                return ScanReport.UniqueLeak.builder()
-                    .primaryRuleId(primary.getPatternName())
-                    .totalRisk(primary.getRiskScore())
-                    .totalConfidence(primary.getConfidenceScore())
-                    .aggregateScore(primary.getNumericScore())
-                    .secret(primary.getSecretValue())
-                    .maskedSecret(primary.getMaskedSecret())
-                    .hash(fingerprint)
-                    .scoreHistory(primary.getScoreHistory())
-                    .occurrences(occs.stream().map(f -> ScanReport.Occurrence.builder()
-                        .relativePath(f.getContext().getPath().toString())
-                        .absolutePath(f.getContext().getPath().toAbsolutePath().toString())
-                        .lineNumber(f.getLineNumber())
-                        .snippet(f.getContextSnippet())
-                        .build()).collect(Collectors.toList()))
-                    .build();
-            })
+            return ScanReport.UniqueLeak.builder()
+                .primaryRuleId(primary.getPatternName())
+                .totalRisk(primary.getRiskScore())
+                .totalConfidence(primary.getConfidenceScore())
+                .aggregateScore(primary.getNumericScore())
+                .secret(primary.getSecretValue())
+                .maskedSecret(primary.getMaskedSecret())
+                .hash(fingerprint)
+                .scoreHistory(primary.getScoreHistory())
+                .occurrences(occs.stream().map(f -> ScanReport.Occurrence.builder()
+                    .relativePath(f.getContext().getPath().toString())
+                    .absolutePath(f.getContext().getPath().toAbsolutePath().toString())
+                    .lineNumber(f.getLineNumber())
+                    .snippet(f.getContextSnippet())
+                    .build()).collect(Collectors.toList()))
+                .build();
+        })
             // Sort discoveries by descending threat score.
             .sorted(Comparator.comparing(ScanReport.UniqueLeak::getAggregateScore).reversed())
             .collect(Collectors.toList());
@@ -201,7 +196,8 @@ public class Reporter {
                 .totalOccurrences(findings.size())
                 .filesScanned((int) stats.getFilesScanned().sum())
                 .criticalCount((int) leaks.stream().filter(l -> l.getAggregateScore() > 80).count())
-                .warningCount((int) leaks.stream().filter(l -> l.getAggregateScore() <= 80 && l.getAggregateScore() > 40).count())
+                .warningCount((int) leaks.stream().filter(l -> l.getAggregateScore() <= 80 && l
+                    .getAggregateScore() > 40).count())
                 .build())
             .ruleDictionary(ruleDict)
             .leaks(leaks)
@@ -249,7 +245,8 @@ public class Reporter {
             log.info(SEPARATOR);
 
             log.info("Files discovered: " + stats.getFilesDiscovered().sum());
-            log.info("Files excluded:   " + stats.getExclusionBreakdown().values().stream().mapToLong(LongAdder::sum).sum());
+            log.info("Files excluded:   " + stats.getExclusionBreakdown().values().stream().mapToLong(LongAdder::sum)
+                .sum());
             if (log.isDebugEnabled()) {
                 stats.getExclusionBreakdown().forEach(
                     (key, value) -> log.debug(String.format("  %s: %d", key.getDescription(), value.sum())));

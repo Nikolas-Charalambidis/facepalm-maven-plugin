@@ -1,12 +1,15 @@
+/*
+ * Licensed under Apache-2.0.
+ * Copyright (c) 2026 Nikolas Charalambidis.
+ * All rights reserved.
+ */
+
 package dev.nichar.facepalm.engine.postprocessor;
-
-import java.util.List;
-
-import jakarta.annotation.Nonnull;
 
 import dev.nichar.facepalm.engine.FileContext;
 import dev.nichar.facepalm.engine.Finding;
-
+import jakarta.annotation.Nonnull;
+import java.util.List;
 
 /**
  * Interface for components that perform final adjustments on discovery findings at the file level.

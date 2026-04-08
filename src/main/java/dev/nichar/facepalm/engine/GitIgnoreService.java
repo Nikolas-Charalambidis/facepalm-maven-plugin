@@ -1,5 +1,13 @@
+/*
+ * Licensed under Apache-2.0.
+ * Copyright (c) 2026 Nikolas Charalambidis.
+ * All rights reserved.
+ */
+
 package dev.nichar.facepalm.engine;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -9,17 +17,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.stream.Stream;
-
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugin.logging.SystemStreamLog;
-
 
 /**
  * Manages {@code .gitignore} files to provide context-aware path filtering.

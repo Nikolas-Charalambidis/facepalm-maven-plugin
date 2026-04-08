@@ -1,6 +1,10 @@
-package dev.nichar.facepalm;
+/*
+ * Licensed under Apache-2.0.
+ * Copyright (c) 2026 Nikolas Charalambidis.
+ * All rights reserved.
+ */
 
-import org.apache.maven.plugins.annotations.Parameter;
+package dev.nichar.facepalm;
 
 import dev.nichar.facepalm.config.EngineConfig;
 import dev.nichar.facepalm.config.EvaluatorConfig;
@@ -10,7 +14,6 @@ import dev.nichar.facepalm.config.ScoringConfig;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
-
 
 /**
  * Root configuration object for the Facepalm plugin.

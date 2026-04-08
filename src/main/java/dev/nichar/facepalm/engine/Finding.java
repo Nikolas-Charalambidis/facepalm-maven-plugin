@@ -1,16 +1,19 @@
+/*
+ * Licensed under Apache-2.0.
+ * Copyright (c) 2026 Nikolas Charalambidis.
+ * All rights reserved.
+ */
+
 package dev.nichar.facepalm.engine;
 
+import dev.nichar.facepalm.config.ScoringConfig;
+import jakarta.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
-
-import jakarta.annotation.Nonnull;
-
-import dev.nichar.facepalm.config.ScoringConfig;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
 
 /**
  * Represents a discovered secret and its associated threat metadata.
@@ -83,6 +86,7 @@ public class Finding {
      */
     @Nonnull
     public String getMaskedSecret() {
-        return secretValue.length() <= 8 ? "****" : secretValue.substring(0, 4) + "..." + secretValue.substring(secretValue.length() - 4);
+        return secretValue.length() <= 8 ? "****"
+            : secretValue.substring(0, 4) + "..." + secretValue.substring(secretValue.length() - 4);
     }
 }

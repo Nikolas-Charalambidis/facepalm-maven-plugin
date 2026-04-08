@@ -1,13 +1,17 @@
-package dev.nichar.facepalm.config;
+/*
+ * Licensed under Apache-2.0.
+ * Copyright (c) 2026 Nikolas Charalambidis.
+ * All rights reserved.
+ */
 
-import java.util.List;
+package dev.nichar.facepalm.config;
 
 import dev.nichar.facepalm.pattern.SecretPattern;
 import dev.nichar.facepalm.pattern.SecretPatternRegistry;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 
 /**
  * Configuration for defining or overriding secret detection patterns.

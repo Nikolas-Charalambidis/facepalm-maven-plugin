@@ -1,5 +1,16 @@
+/*
+ * Licensed under Apache-2.0.
+ * Copyright (c) 2026 Nikolas Charalambidis.
+ * All rights reserved.
+ */
+
 package dev.nichar.facepalm.engine.extractor;
 
+import dev.nichar.facepalm.FacepalmConfig;
+import dev.nichar.facepalm.engine.FileContext;
+import dev.nichar.facepalm.engine.Finding;
+import dev.nichar.facepalm.pattern.SecretPattern;
+import jakarta.annotation.Nonnull;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -7,18 +18,9 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Matcher;
-
-import jakarta.annotation.Nonnull;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-
-import dev.nichar.facepalm.FacepalmConfig;
-import dev.nichar.facepalm.engine.FileContext;
-import dev.nichar.facepalm.engine.Finding;
-import dev.nichar.facepalm.pattern.SecretPattern;
-
 
 /**
  * Scans file content using regular expressions to identify potential secrets.

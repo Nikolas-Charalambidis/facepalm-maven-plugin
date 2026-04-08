@@ -1,15 +1,18 @@
-package dev.nichar.facepalm.engine.evaluator;
+/*
+ * Licensed under Apache-2.0.
+ * Copyright (c) 2026 Nikolas Charalambidis.
+ * All rights reserved.
+ */
 
-import jakarta.annotation.Nonnull;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+package dev.nichar.facepalm.engine.evaluator;
 
 import dev.nichar.facepalm.engine.FileContext;
 import dev.nichar.facepalm.engine.Finding;
 import dev.nichar.facepalm.engine.GitIgnoreService;
+import jakarta.annotation.Nonnull;
+import javax.inject.Named;
+import javax.inject.Singleton;
 import lombok.RequiredArgsConstructor;
-
 
 /**
  * Evaluates findings based on their visibility in Git history.

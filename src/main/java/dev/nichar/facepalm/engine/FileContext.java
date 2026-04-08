@@ -1,13 +1,16 @@
+/*
+ * Licensed under Apache-2.0.
+ * Copyright (c) 2026 Nikolas Charalambidis.
+ * All rights reserved.
+ */
+
 package dev.nichar.facepalm.engine;
 
+import jakarta.annotation.Nonnull;
 import java.nio.file.Path;
 import java.util.List;
-
-import jakarta.annotation.Nonnull;
-
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-
 
 /**
  * Immutable snapshot of a file being analyzed.

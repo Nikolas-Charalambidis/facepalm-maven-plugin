@@ -1,12 +1,16 @@
-package dev.nichar.facepalm.module;
+/*
+ * Licensed under Apache-2.0.
+ * Copyright (c) 2026 Nikolas Charalambidis.
+ * All rights reserved.
+ */
 
-import javax.inject.Singleton;
+package dev.nichar.facepalm.module;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import dev.nichar.facepalm.FacepalmConfig;
+import javax.inject.Singleton;
 import lombok.RequiredArgsConstructor;
-
 
 /**
  * Guice module for injecting plugin configuration.

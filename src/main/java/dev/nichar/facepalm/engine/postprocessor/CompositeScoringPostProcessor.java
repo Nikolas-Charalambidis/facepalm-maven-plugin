@@ -1,16 +1,19 @@
+/*
+ * Licensed under Apache-2.0.
+ * Copyright (c) 2026 Nikolas Charalambidis.
+ * All rights reserved.
+ */
+
 package dev.nichar.facepalm.engine.postprocessor;
-
-import java.util.List;
-
-import jakarta.annotation.Nonnull;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 
 import dev.nichar.facepalm.FacepalmConfig;
 import dev.nichar.facepalm.engine.FileContext;
 import dev.nichar.facepalm.engine.Finding;
-
+import jakarta.annotation.Nonnull;
+import java.util.List;
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
 
 /**
  * Refines discovery findings based on the collective context of a file.
@@ -44,7 +47,8 @@ class CompositeScoringPostProcessor implements FileFindingsPostProcessor {
             }
             // Elevate risk if a single file contains multiple distinct secret types.
             else if (uniquePatterns > 1) {
-                // Increases risk because a file containing multiple secret types is statistically more likely to be a real credential leak.
+                // Increases risk because a file containing multiple secret types is statistically more likely to be a
+                // real credential leak.
                 finding.log("Composite Risk: Multiple distinct secrets in one file", 15, 10);
             }
         }

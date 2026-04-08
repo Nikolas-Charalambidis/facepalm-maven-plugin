@@ -1,19 +1,21 @@
-package dev.nichar.facepalm;
+/*
+ * Licensed under Apache-2.0.
+ * Copyright (c) 2026 Nikolas Charalambidis.
+ * All rights reserved.
+ */
 
-import java.io.File;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Locale;
+package dev.nichar.facepalm;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.nichar.facepalm.report.FindingReport;
-
+import jakarta.annotation.Nonnull;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Locale;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.reporting.AbstractMavenReport;
 import org.apache.maven.reporting.MavenReportException;
-
-import jakarta.annotation.Nonnull;
 
 /**
  * Maven Site reporting Mojo for integrated security scan results.
@@ -55,7 +57,8 @@ public class FacepalmReportMojo extends AbstractMavenReport {
         getLog().debug("Facepalm report generation output directory: " + outputDirectory.getAbsolutePath());
 
         // Resolve findings file relative to reporting output directory.
-        final var resultsFile = outputDirectory.toPath().resolve("..").resolve("facepalm-findings.json").normalize().toFile();
+        final var resultsFile = outputDirectory.toPath().resolve("..").resolve("facepalm-findings.json").normalize()
+            .toFile();
 
         if (!resultsFile.exists()) {
             getLog().warn("Facepalm results not found at " + resultsFile.getAbsolutePath() +
@@ -70,8 +73,7 @@ public class FacepalmReportMojo extends AbstractMavenReport {
             // Deserialize findings from the machine-readable JSON format.
             findings = mapper.readValue(
                 resultsFile,
-                mapper.getTypeFactory().constructCollectionType(List.class, FindingReport.class)
-            );
+                mapper.getTypeFactory().constructCollectionType(List.class, FindingReport.class));
         } catch (Exception e) {
             throw new MavenReportException("Failed to read facepalm-results.json. Is the file corrupted?", e);
         }
@@ -114,11 +116,15 @@ public class FacepalmReportMojo extends AbstractMavenReport {
 
         sink.list();
         sink.listItem();
-        sink.bold(); sink.text("Critical Findings: "); sink.bold_();
+        sink.bold();
+        sink.text("Critical Findings: ");
+        sink.bold_();
         sink.text(String.valueOf(errors));
         sink.listItem_();
         sink.listItem();
-        sink.bold(); sink.text("Warnings: "); sink.bold_();
+        sink.bold();
+        sink.text("Warnings: ");
+        sink.bold_();
         sink.text(String.valueOf(warnings));
         sink.listItem_();
         sink.list_();
@@ -137,12 +143,24 @@ public class FacepalmReportMojo extends AbstractMavenReport {
 
             // Render Table Header
             sink.tableRow();
-            sink.tableHeaderCell(); sink.text("Severity"); sink.tableHeaderCell_();
-            sink.tableHeaderCell(); sink.text("Total Score"); sink.tableHeaderCell_();
-            sink.tableHeaderCell(); sink.text("Risk Score"); sink.tableHeaderCell_();
-            sink.tableHeaderCell(); sink.text("Confidence Score"); sink.tableHeaderCell_();
-            sink.tableHeaderCell(); sink.text("Location"); sink.tableHeaderCell_();
-            sink.tableHeaderCell(); sink.text("Pattern / Secret"); sink.tableHeaderCell_();
+            sink.tableHeaderCell();
+            sink.text("Severity");
+            sink.tableHeaderCell_();
+            sink.tableHeaderCell();
+            sink.text("Total Score");
+            sink.tableHeaderCell_();
+            sink.tableHeaderCell();
+            sink.text("Risk Score");
+            sink.tableHeaderCell_();
+            sink.tableHeaderCell();
+            sink.text("Confidence Score");
+            sink.tableHeaderCell_();
+            sink.tableHeaderCell();
+            sink.text("Location");
+            sink.tableHeaderCell_();
+            sink.tableHeaderCell();
+            sink.text("Pattern / Secret");
+            sink.tableHeaderCell_();
             sink.tableRow_();
 
             // Populate Table Rows
@@ -153,7 +171,9 @@ public class FacepalmReportMojo extends AbstractMavenReport {
                 sink.tableCell();
                 // Highlight high-risk findings with bold formatting.
                 if ("ERROR".equals(finding.getFinalSeverity())) {
-                    sink.bold(); sink.text("HIGH"); sink.bold_();
+                    sink.bold();
+                    sink.text("HIGH");
+                    sink.bold_();
                 } else {
                     sink.text(finding.getFinalSeverity());
                 }
@@ -221,7 +241,8 @@ public class FacepalmReportMojo extends AbstractMavenReport {
         sink.sectionTitle1_();
 
         sink.paragraph();
-        sink.text("No scan data available. You must run the facepalm:scan goal prior to site generation to see results here.");
+        sink.text(
+            "No scan data available. You must run the facepalm:scan goal prior to site generation to see results here.");
         sink.paragraph_();
 
         sink.section1_();

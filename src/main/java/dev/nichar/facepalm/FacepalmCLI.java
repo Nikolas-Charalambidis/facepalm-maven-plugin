@@ -1,3 +1,9 @@
+/*
+ * Licensed under Apache-2.0.
+ * Copyright (c) 2026 Nikolas Charalambidis.
+ * All rights reserved.
+ */
+
 package dev.nichar.facepalm;
 
 import com.google.inject.Guice;
@@ -9,7 +15,7 @@ import dev.nichar.facepalm.config.ScoringConfig;
 import dev.nichar.facepalm.engine.FacepalmRunner;
 import dev.nichar.facepalm.module.FacepalmConfigModule;
 import dev.nichar.facepalm.module.FacepalmLogModule;
-
+import java.nio.file.Paths;
 import org.apache.maven.monitor.logging.DefaultLog;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -20,9 +26,6 @@ import org.eclipse.sisu.space.BeanScanning;
 import org.eclipse.sisu.space.SpaceModule;
 import org.eclipse.sisu.space.URLClassSpace;
 import org.eclipse.sisu.wire.WireModule;
-
-import java.nio.file.Paths;
-
 
 /**
  * Command-line interface for running Facepalm scans outside the Maven lifecycle.
@@ -43,7 +46,8 @@ public class FacepalmCLI {
         final var postProcessorConfig = new PostProcessorConfig();
         final var patternConfig = new PatternConfig();
 
-        final var effectiveConfig = new FacepalmConfig(engineConfig, scoringConfig, evaluatorConfig, postProcessorConfig, patternConfig);
+        final var effectiveConfig = new FacepalmConfig(engineConfig, scoringConfig, evaluatorConfig,
+            postProcessorConfig, patternConfig);
 
         // Discover injectable components from the current classpath.
         final var space = new URLClassSpace(FacepalmCLI.class.getClassLoader());
@@ -58,9 +62,7 @@ public class FacepalmCLI {
                     new DefaultLog(
                         new ConsoleLogger(Logger.LEVEL_DEBUG, "facepalm-cli"))),
                 // Bind the active configuration to the container.
-                new FacepalmConfigModule(effectiveConfig)
-            )
-        );
+                new FacepalmConfigModule(effectiveConfig)));
 
         // Resolve component instances for the scanning workflow.
         final var runner = injector.getInstance(FacepalmRunner.class);
@@ -76,7 +78,7 @@ public class FacepalmCLI {
         final var root = Paths.get(args.length > 0 ? args[0] : ".").toAbsolutePath().normalize();
 
         try {
-            runner.run(root,  Paths.get("target"), "SNAPSHOT");
+            runner.run(root, Paths.get("target"), "SNAPSHOT");
         } catch (MojoFailureException e) {
             throw e;
         } catch (Exception e) {

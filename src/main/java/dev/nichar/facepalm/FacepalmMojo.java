@@ -1,10 +1,24 @@
+/*
+ * Licensed under Apache-2.0.
+ * Copyright (c) 2026 Nikolas Charalambidis.
+ * All rights reserved.
+ */
+
 package dev.nichar.facepalm;
 
 import static dev.nichar.facepalm.configurator.CommaSeparatedConfigurator.COMMA_SEPARATED_CONFIGURATOR;
 
+import com.google.inject.Guice;
+import dev.nichar.facepalm.config.EngineConfig;
+import dev.nichar.facepalm.config.EvaluatorConfig;
+import dev.nichar.facepalm.config.PatternConfig;
+import dev.nichar.facepalm.config.PostProcessorConfig;
+import dev.nichar.facepalm.config.ScoringConfig;
+import dev.nichar.facepalm.engine.FacepalmRunner;
+import dev.nichar.facepalm.module.FacepalmConfigModule;
+import dev.nichar.facepalm.module.FacepalmLogModule;
 import java.io.File;
 import java.util.Set;
-
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -17,17 +31,6 @@ import org.eclipse.sisu.space.BeanScanning;
 import org.eclipse.sisu.space.SpaceModule;
 import org.eclipse.sisu.space.URLClassSpace;
 import org.eclipse.sisu.wire.WireModule;
-
-import com.google.inject.Guice;
-import dev.nichar.facepalm.config.EngineConfig;
-import dev.nichar.facepalm.config.EvaluatorConfig;
-import dev.nichar.facepalm.config.PatternConfig;
-import dev.nichar.facepalm.config.PostProcessorConfig;
-import dev.nichar.facepalm.config.ScoringConfig;
-import dev.nichar.facepalm.engine.FacepalmRunner;
-import dev.nichar.facepalm.module.FacepalmConfigModule;
-import dev.nichar.facepalm.module.FacepalmLogModule;
-
 
 /**
  * Entry point for security scans during the {@code verify} phase.
@@ -154,8 +157,10 @@ public class FacepalmMojo extends AbstractMojo {
     public void execute() throws MojoExecutionException, MojoFailureException {
 
         // Map Maven parameters to internal configuration.
-        final var engine = new EngineConfig(threads, maxFileSizeBytes, skipBinaryRegex, skipDirs, showProcessed, showSkipped);
-        final var scoring = new ScoringConfig(errorThreshold, warningThreshold, showScoring, showDetails, failOnError, failOnWarnings);
+        final var engine = new EngineConfig(threads, maxFileSizeBytes, skipBinaryRegex, skipDirs, showProcessed,
+            showSkipped);
+        final var scoring = new ScoringConfig(errorThreshold, warningThreshold, showScoring, showDetails, failOnError,
+            failOnWarnings);
         final var effectiveConfig = new FacepalmConfig(engine, scoring, evaluators, postProcessing, patterns);
 
         // Discover components using Sisu indexing.
@@ -168,9 +173,7 @@ public class FacepalmMojo extends AbstractMojo {
                 new SpaceModule(space, BeanScanning.INDEX),
                 // Bridge Maven Log and state into the container.
                 new FacepalmLogModule(getLog()),
-                new FacepalmConfigModule(effectiveConfig)
-            )
-        );
+                new FacepalmConfigModule(effectiveConfig)));
 
         // Inject components manually since Maven handles Mojo instantiation.
         final var runner = injector.getInstance(FacepalmRunner.class);

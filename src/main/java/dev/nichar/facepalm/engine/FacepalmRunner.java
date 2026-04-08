@@ -1,25 +1,27 @@
+/*
+ * Licensed under Apache-2.0.
+ * Copyright (c) 2026 Nikolas Charalambidis.
+ * All rights reserved.
+ */
+
 package dev.nichar.facepalm.engine;
-
-import java.io.File;
-import java.nio.file.Path;
-import java.util.List;
-
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
-
-import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugin.logging.Log;
-import org.apache.maven.plugin.logging.SystemStreamLog;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.nichar.facepalm.FacepalmConfig;
 import dev.nichar.facepalm.config.ScoringConfig;
 import dev.nichar.facepalm.report.FindingReport;
 import dev.nichar.facepalm.report.Reporter;
-
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+import java.io.File;
+import java.nio.file.Path;
+import java.util.List;
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
+import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugin.logging.Log;
+import org.apache.maven.plugin.logging.SystemStreamLog;
 
 /**
  * Orchestrates the scanning lifecycle.
@@ -82,7 +84,8 @@ public class FacepalmRunner {
     /**
      * Serializes findings to a machine-readable JSON format for the reporting phase.
      */
-    private void saveFindingsToJson(@Nonnull final List<Finding> findings, @Nonnull final File outputFile) throws Exception {
+    private void saveFindingsToJson(@Nonnull final List<Finding> findings, @Nonnull final File outputFile)
+            throws Exception {
         if (!outputFile.getParentFile().exists()) {
             outputFile.getParentFile().mkdirs();
         }
@@ -125,7 +128,8 @@ public class FacepalmRunner {
             throw new MojoFailureException("Facepalm scan failed: " + errors + " critical findings detected.");
         }
         if (scoring.isFailOnWarnings() && warnings > 0) {
-            throw new MojoFailureException("Facepalm scan failed: " + warnings + " warnings detected and failOnWarnings is true.");
+            throw new MojoFailureException("Facepalm scan failed: " + warnings
+                + " warnings detected and failOnWarnings is true.");
         }
     }
 }

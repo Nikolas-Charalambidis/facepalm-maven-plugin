@@ -1,3 +1,9 @@
+/*
+ * Licensed under Apache-2.0.
+ * Copyright (c) 2026 Nikolas Charalambidis.
+ * All rights reserved.
+ */
+
 package dev.nichar.facepalm.configurator;
 
 import java.util.Arrays;
@@ -6,14 +12,12 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-
 import org.codehaus.plexus.component.configurator.ComponentConfigurationException;
 import org.codehaus.plexus.component.configurator.ConfigurationListener;
 import org.codehaus.plexus.component.configurator.converters.AbstractConfigurationConverter;
 import org.codehaus.plexus.component.configurator.converters.lookup.ConverterLookup;
 import org.codehaus.plexus.component.configurator.expression.ExpressionEvaluator;
 import org.codehaus.plexus.configuration.PlexusConfiguration;
-
 
 /**
  * Custom Plexus converter for transforming comma-separated strings into {@link java.util.Set} objects.
@@ -52,7 +56,8 @@ public class CommaSeparatedSetConverter extends AbstractConfigurationConverter {
                 .map(String::strip)
                 // Discards strings that are empty OR only contain whitespace.
                 .filter(Predicate.not(String::isBlank))
-                // Aggregates the cleaned elements into a LinkedHashSet to maintain the original insertion order while ensuring uniqueness.
+                // Aggregates the cleaned elements into a LinkedHashSet to maintain the original insertion order while
+                // ensuring uniqueness.
                 .collect(Collectors.toCollection(LinkedHashSet::new));
         }
 

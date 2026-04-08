@@ -1,16 +1,19 @@
+/*
+ * Licensed under Apache-2.0.
+ * Copyright (c) 2026 Nikolas Charalambidis.
+ * All rights reserved.
+ */
+
 package dev.nichar.facepalm.engine.evaluator;
-
-import java.util.HashMap;
-import java.util.Map;
-
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
-import javax.inject.Named;
-import javax.inject.Singleton;
 
 import dev.nichar.facepalm.engine.FileContext;
 import dev.nichar.facepalm.engine.Finding;
-
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+import java.util.HashMap;
+import java.util.Map;
+import javax.inject.Named;
+import javax.inject.Singleton;
 
 /**
  * Evaluates a secret's randomness using Shannon entropy.

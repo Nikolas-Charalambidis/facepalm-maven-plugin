@@ -1,9 +1,14 @@
+/*
+ * Licensed under Apache-2.0.
+ * Copyright (c) 2026 Nikolas Charalambidis.
+ * All rights reserved.
+ */
+
 package dev.nichar.facepalm.report;
 
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.jackson.Jacksonized;
-
 
 /**
  * Data Transfer Object for scan findings.

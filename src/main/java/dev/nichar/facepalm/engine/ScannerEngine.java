@@ -1,5 +1,17 @@
+/*
+ * Licensed under Apache-2.0.
+ * Copyright (c) 2026 Nikolas Charalambidis.
+ * All rights reserved.
+ */
+
 package dev.nichar.facepalm.engine;
 
+import dev.nichar.facepalm.FacepalmConfig;
+import dev.nichar.facepalm.engine.evaluator.FindingEvaluator;
+import dev.nichar.facepalm.engine.extractor.SecretExtractor;
+import dev.nichar.facepalm.engine.postprocessor.FileFindingsPostProcessor;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import java.io.IOException;
 import java.nio.charset.MalformedInputException;
 import java.nio.file.Files;
@@ -12,22 +24,12 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.Executors;
-
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-
+import lombok.Getter;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugin.logging.SystemStreamLog;
-
-import dev.nichar.facepalm.FacepalmConfig;
-import dev.nichar.facepalm.engine.evaluator.FindingEvaluator;
-import dev.nichar.facepalm.engine.extractor.SecretExtractor;
-import dev.nichar.facepalm.engine.postprocessor.FileFindingsPostProcessor;
-import lombok.Getter;
-
 
 /**
  * Concurrent engine for file discovery and secret extraction.

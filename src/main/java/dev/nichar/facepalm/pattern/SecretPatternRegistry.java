@@ -1,9 +1,13 @@
+/*
+ * Licensed under Apache-2.0.
+ * Copyright (c) 2026 Nikolas Charalambidis.
+ * All rights reserved.
+ */
+
 package dev.nichar.facepalm.pattern;
 
 import java.util.List;
 import java.util.regex.Pattern;
-
-import dev.nichar.facepalm.engine.evaluator.FindingEvaluator;
 import lombok.experimental.UtilityClass;
 
 /**
@@ -23,18 +27,26 @@ public class SecretPatternRegistry {
     public static final List<SecretPattern> DEFAULT_PATTERNS = List.of(
         // Cloud & Infrastructure Providers
         new SecretPattern("AWS Access Key", Pattern.compile("\\bAKIA[0-9A-Z]{16}\\b"), 70, 95, false),
-        new SecretPattern("AWS Secret Key", Pattern.compile("(?i)aws_(?:secret|access|key).{0,10}[=:]\\s*([^\\s]{40})"), 85, 80, false),
+        new SecretPattern("AWS Secret Key", Pattern.compile("(?i)aws_(?:secret|access|key).{0,10}[=:]\\s*([^\\s]{40})"),
+            85, 80, false),
         new SecretPattern("Google API Key", Pattern.compile("\\bAIza[0-9A-Za-z\\-_]{35}\\b"), 60, 90, false),
-        new SecretPattern("Firebase Key", Pattern.compile("AAAA[A-Za-z0-9_\\-]{7}:[A-Za-z0-9_\\-]{140,}"), 75, 95, false),
-        new SecretPattern("Heroku API Key", Pattern.compile("(?i)heroku.*[=:]\\s*([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})"), 70, 85, false),
-        new SecretPattern("Azure OpenAI Key", Pattern.compile("(?i)(?:azure|openai).*?key.{0,10}[=:]\\s*([a-zA-Z0-9]{32})"), 80, 85, false),
+        new SecretPattern("Firebase Key", Pattern.compile("AAAA[A-Za-z0-9_\\-]{7}:[A-Za-z0-9_\\-]{140,}"), 75, 95,
+            false),
+        new SecretPattern("Heroku API Key", Pattern.compile(
+            "(?i)heroku.*[=:]\\s*([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})"), 70,
+            85, false),
+        new SecretPattern("Azure OpenAI Key", Pattern.compile(
+            "(?i)(?:azure|openai).*?key.{0,10}[=:]\\s*([a-zA-Z0-9]{32})"), 80, 85, false),
 
         // Database Connection Strings
-        new SecretPattern("MongoDB Connection", Pattern.compile("(?i)mongodb(?:\\+srv)?://([^/\\s]+:[^/\\s]+)@"), 90, 95, false),
-        new SecretPattern("PostgreSQL Connection", Pattern.compile("(?i)postgres(?:ql)?://([^/\\s]+:[^/\\s]+)@"), 90, 95, false),
+        new SecretPattern("MongoDB Connection", Pattern.compile("(?i)mongodb(?:\\+srv)?://([^/\\s]+:[^/\\s]+)@"), 90,
+            95, false),
+        new SecretPattern("PostgreSQL Connection", Pattern.compile("(?i)postgres(?:ql)?://([^/\\s]+:[^/\\s]+)@"), 90,
+            95, false),
         new SecretPattern("MySQL Connection", Pattern.compile("(?i)mysql://([^/\\s]+:[^/\\s]+)@"), 90, 95, false),
         new SecretPattern("Redis Password", Pattern.compile("(?i)redis://[^/\\s]*:([^/\\s]+)@"), 80, 90, false),
-        new SecretPattern("SQL Server Password", Pattern.compile("(?i)(?:sql[_-]?server|mssql).*password\\s*[=:]\\s*([^\\s;]{8,})"), 80, 85, false),
+        new SecretPattern("SQL Server Password", Pattern.compile(
+            "(?i)(?:sql[_-]?server|mssql).*password\\s*[=:]\\s*([^\\s;]{8,})"), 80, 85, false),
 
         // AI & LLM Providers (High Risk)
         new SecretPattern("OpenAI Project Key", Pattern.compile("sk-proj-[A-Za-z0-9]{48,}"), 90, 100, false),
@@ -43,8 +55,10 @@ public class SecretPatternRegistry {
         new SecretPattern("Google Gemini API Key", Pattern.compile("\\bAIza[0-9A-Za-z\\-_]{35}\\b"), 60, 85, false),
         new SecretPattern("HuggingFace Token", Pattern.compile("hf_[A-Za-z0-9]{34}"), 75, 95, false),
         new SecretPattern("Replicate API Token", Pattern.compile("r8_[A-Za-z0-9]{30,40}"), 75, 95, false),
-        new SecretPattern("Cohere API Key", Pattern.compile("\\b[cC]ohere[_-]?api[_-]?key.{0,10}[=:]\\s*([A-Za-z0-9]{40})"), 75, 90, false),
-        new SecretPattern("Mistral API Key", Pattern.compile("\\b[mM]istral[_-]?api[_-]?key.{0,10}[=:]\\s*([A-Za-z0-9]{32})"), 75, 90, false),
+        new SecretPattern("Cohere API Key", Pattern.compile(
+            "\\b[cC]ohere[_-]?api[_-]?key.{0,10}[=:]\\s*([A-Za-z0-9]{40})"), 75, 90, false),
+        new SecretPattern("Mistral API Key", Pattern.compile(
+            "\\b[mM]istral[_-]?api[_-]?key.{0,10}[=:]\\s*([A-Za-z0-9]{32})"), 75, 90, false),
         new SecretPattern("Groq API Key", Pattern.compile("gsk_[A-Za-z0-9]{52}"), 80, 95, false),
 
         // Payments & Finance
@@ -60,16 +74,24 @@ public class SecretPatternRegistry {
         new SecretPattern("Mailgun API Key", Pattern.compile("key-[0-9a-zA-Z]{32}"), 70, 90, false),
 
         // Webhooks
-        new SecretPattern("Slack Webhook", Pattern.compile("https://hooks\\.slack\\.com/services/T[A-Z0-9]{8}/B[A-Z0-9]{8}/[A-Za-z0-9]{24}"), 80, 100, false),
-        new SecretPattern("Discord Webhook", Pattern.compile("https://discord\\.com/api/webhooks/[0-9]{18,19}/[A-Za-z0-9\\-_]{68}"), 70, 100, false),
+        new SecretPattern("Slack Webhook", Pattern.compile(
+            "https://hooks\\.slack\\.com/services/T[A-Z0-9]{8}/B[A-Z0-9]{8}/[A-Za-z0-9]{24}"), 80, 100, false),
+        new SecretPattern("Discord Webhook", Pattern.compile(
+            "https://discord\\.com/api/webhooks/[0-9]{18,19}/[A-Za-z0-9\\-_]{68}"), 70, 100, false),
 
         // Cryptographic Keys
-        new SecretPattern("Private Key Block", Pattern.compile("(?s)-----BEGIN (?:RSA|EC|OPENSSH|PGP)? PRIVATE KEY-----.*?-----END (?:RSA|EC|OPENSSH|PGP)? PRIVATE KEY-----"), 100, 100, true),
+        new SecretPattern("Private Key Block", Pattern.compile(
+            "(?s)-----BEGIN (?:RSA|EC|OPENSSH|PGP)? PRIVATE KEY-----.*?-----END (?:RSA|EC|OPENSSH|PGP)? PRIVATE KEY-----"),
+            100, 100, true),
 
         // Generic & Fallback Patterns
-        new SecretPattern("Basic Auth Header", Pattern.compile("(?i)Authorization:\\s*Basic\\s+(?!\\{\\{|\\$\\{)([A-Za-z0-9+/=]{20,})"), 60, 75, false),
-        new SecretPattern("JWT Token", Pattern.compile("eyJ[A-Za-z0-9_\\-]{10,}\\.[A-Za-z0-9._\\-]{10,}\\.[A-Za-z0-9._\\-]{10,}"), 30, 40, false),
-        new SecretPattern("Generic API Key Assignment", Pattern.compile("(?i)(?:api[_-]?key|secret|token|client[_-]?secret)\\s*[=:]\\s*['\"]?(?!\\{\\{|\\$\\{)([^'\"\\s}]{16,})['\"]?"), 65, 70, false),
-        new SecretPattern("Generic Password Assignment", Pattern.compile("(?i)(?:password|passwd|pwd)\\s*[=:]\\s*['\"]?(?!\\{\\{|\\$\\{)([^'\"\\s}]{8,})['\"]?"), 50, 40, false)
-    );
+        new SecretPattern("Basic Auth Header", Pattern.compile(
+            "(?i)Authorization:\\s*Basic\\s+(?!\\{\\{|\\$\\{)([A-Za-z0-9+/=]{20,})"), 60, 75, false),
+        new SecretPattern("JWT Token", Pattern.compile(
+            "eyJ[A-Za-z0-9_\\-]{10,}\\.[A-Za-z0-9._\\-]{10,}\\.[A-Za-z0-9._\\-]{10,}"), 30, 40, false),
+        new SecretPattern("Generic API Key Assignment", Pattern.compile(
+            "(?i)(?:api[_-]?key|secret|token|client[_-]?secret)\\s*[=:]\\s*['\"]?(?!\\{\\{|\\$\\{)([^'\"\\s}]{16,})['\"]?"),
+            65, 70, false),
+        new SecretPattern("Generic Password Assignment", Pattern.compile(
+            "(?i)(?:password|passwd|pwd)\\s*[=:]\\s*['\"]?(?!\\{\\{|\\$\\{)([^'\"\\s}]{8,})['\"]?"), 50, 40, false));
 }

@@ -1,5 +1,10 @@
-package dev.nichar.facepalm.configurator;
+/*
+ * Licensed under Apache-2.0.
+ * Copyright (c) 2026 Nikolas Charalambidis.
+ * All rights reserved.
+ */
 
+package dev.nichar.facepalm.configurator;
 
 import org.codehaus.plexus.classworlds.realm.ClassRealm;
 import org.codehaus.plexus.component.annotations.Component;
@@ -9,7 +14,6 @@ import org.codehaus.plexus.component.configurator.ComponentConfigurator;
 import org.codehaus.plexus.component.configurator.ConfigurationListener;
 import org.codehaus.plexus.component.configurator.expression.ExpressionEvaluator;
 import org.codehaus.plexus.configuration.PlexusConfiguration;
-
 
 /**
  * Custom Maven configurator for mapping comma-separated strings to {@link java.util.Set} parameters.

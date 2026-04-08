@@ -1,10 +1,14 @@
-package dev.nichar.facepalm.module;
+/*
+ * Licensed under Apache-2.0.
+ * Copyright (c) 2026 Nikolas Charalambidis.
+ * All rights reserved.
+ */
 
-import org.apache.maven.plugin.logging.Log;
+package dev.nichar.facepalm.module;
 
 import com.google.inject.AbstractModule;
 import lombok.RequiredArgsConstructor;
-
+import org.apache.maven.plugin.logging.Log;
 
 /**
  * Guice module for bridging the Maven logging environment.

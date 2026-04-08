@@ -1,13 +1,17 @@
+/*
+ * Licensed under Apache-2.0.
+ * Copyright (c) 2026 Nikolas Charalambidis.
+ * All rights reserved.
+ */
+
 package dev.nichar.facepalm.config;
 
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 
 /**
  * Configuration for heuristic evaluators that refine discovery risk and confidence.

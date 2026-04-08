@@ -1,14 +1,17 @@
+/*
+ * Licensed under Apache-2.0.
+ * Copyright (c) 2026 Nikolas Charalambidis.
+ * All rights reserved.
+ */
+
 package dev.nichar.facepalm.engine;
 
+import jakarta.annotation.Nonnull;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.LongAdder;
-
-import jakarta.annotation.Nonnull;
-
 import lombok.Data;
-
 
 /**
  * Thread-safe metrics container for real-time scan monitoring.

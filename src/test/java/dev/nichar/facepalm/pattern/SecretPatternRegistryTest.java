@@ -6,8 +6,9 @@
 
 package dev.nichar.facepalm.pattern;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -16,13 +17,13 @@ import org.junit.jupiter.api.Test;
 class SecretPatternRegistryTest {
 
     @Test
-    void default_patterns_register_google_api_keys_once() {
-        final var googleApiKeyRegex = "\\bAIza[0-9A-Za-z\\-_]{35}\\b";
+    void default_patterns_do_not_register_duplicate_regexes() {
+        final var duplicatePatterns = SecretPatternRegistry.DEFAULT_PATTERNS.stream()
+            .collect(Collectors.groupingBy(pattern -> pattern.getPattern().pattern(), Collectors.counting()))
+            .entrySet().stream()
+            .filter(entry -> entry.getValue() > 1)
+            .toList();
 
-        final var matchingPatterns = SecretPatternRegistry.DEFAULT_PATTERNS.stream()
-            .filter(pattern -> googleApiKeyRegex.equals(pattern.getPattern().pattern()))
-            .count();
-
-        assertEquals(1, matchingPatterns);
+        assertTrue(duplicatePatterns.isEmpty(), () -> "Duplicate default secret patterns: " + duplicatePatterns);
     }
 }

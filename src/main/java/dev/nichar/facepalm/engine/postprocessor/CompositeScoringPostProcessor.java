@@ -1,7 +1,6 @@
 /*
- * Licensed under Apache-2.0.
- * Copyright (c) 2026 Nikolas Charalambidis.
- * All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 Nikolas Charalambidis
  */
 
 package dev.nichar.facepalm.engine.postprocessor;

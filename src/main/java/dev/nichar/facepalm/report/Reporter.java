@@ -6,7 +6,6 @@
 package dev.nichar.facepalm.report;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.nichar.facepalm.FacepalmConfig;
 import dev.nichar.facepalm.engine.Finding;
 import dev.nichar.facepalm.engine.ScanReport;
 import dev.nichar.facepalm.engine.ScanStatistics;
@@ -51,7 +50,7 @@ public class Reporter {
     private final Configuration cfg;
 
     @Inject
-    public Reporter(@Nullable final Log log, @Nonnull final FacepalmConfig context) {
+    public Reporter(@Nullable final Log log) {
         this.log = log != null ? log : new org.apache.maven.plugin.logging.SystemStreamLog();
         cfg = new Configuration(Configuration.VERSION_2_3_32);
         cfg.setClassForTemplateLoading(Reporter.class, "/templates");

@@ -45,14 +45,14 @@ public class Reporter {
     private static final String SEPARATOR = "-".repeat(72);
 
     @Inject
-    private dev.nichar.facepalm.FacepalmConfig context;
+    private FacepalmConfig context;
 
     private final Log log;
 
     private final Configuration cfg;
 
     @Inject
-    public Reporter(@Nullable final Log log, @Nonnull final FacepalmConfig context) {
+    public Reporter(@Nullable final Log log) {
         this.log = log != null ? log : new org.apache.maven.plugin.logging.SystemStreamLog();
         cfg = new Configuration(Configuration.VERSION_2_3_32);
         cfg.setClassForTemplateLoading(Reporter.class, "/templates");

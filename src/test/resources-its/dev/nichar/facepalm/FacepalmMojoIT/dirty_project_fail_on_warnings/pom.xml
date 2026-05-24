@@ -32,6 +32,7 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <skipDirs>.git,.idea,.vscode,.mvn,.gradle,node_modules,dist,.next,build,out</skipDirs>
                     <showSkipped>true</showSkipped>
                     <showProcessed>true</showProcessed>
                     <showDetails>true</showDetails>

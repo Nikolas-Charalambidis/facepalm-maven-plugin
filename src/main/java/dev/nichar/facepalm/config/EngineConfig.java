@@ -23,7 +23,8 @@ public class EngineConfig {
     /**
      * Internal defaults for directories to ignore during discovery.
      */
-    public static final Set<String> SKIP_DIRS = Set.of(".git", ".idea");
+    public static final Set<String> SKIP_DIRS = Set.of(".git", ".idea", ".vscode", "target", ".mvn", ".gradle",
+        "node_modules", "dist", ".next", "build", "out");
 
     /**
      * Thread pool size for parallel scanning. Defaults to available CPUs.

@@ -12,7 +12,7 @@ import dev.nichar.facepalm.config.PostProcessorConfig;
 import dev.nichar.facepalm.config.ScoringConfig;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
 
 /**
  * Root configuration object for the Facepalm plugin.
@@ -20,7 +20,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Data
 @AllArgsConstructor
-@RequiredArgsConstructor
+@NoArgsConstructor
 public class FacepalmConfig {
 
     /**

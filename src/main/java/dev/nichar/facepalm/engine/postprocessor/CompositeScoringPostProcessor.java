@@ -45,7 +45,7 @@ class CompositeScoringPostProcessor implements FileFindingsPostProcessor {
                 finding.log("High Volume File (Threshold: " + conf.getHighVolumeThreshold() + ")", -25, -30);
             }
             // Elevate risk if a single file contains multiple distinct secret types.
-            else if (uniquePatterns > 1) {
+            if (uniquePatterns > 1) {
                 // Increases risk because a file containing multiple secret types is statistically more likely to be a
                 // real credential leak.
                 finding.log("Composite Risk: Multiple distinct secrets in one file", 15, 10);

@@ -156,6 +156,14 @@ public class Reporter {
             final var occs = entry.getValue();
             final var primary = occs.get(0);
 
+            final var maxRisk = occs.stream().mapToInt(Finding::getRiskScore).max().orElse(0);
+            final var maxConfidence = occs.stream().mapToInt(Finding::getConfidenceScore).max().orElse(0);
+            final var maxScore = occs.stream().mapToDouble(f -> f.getNumericScore(scoringConfig)).max().orElse(0.0);
+            final var combinedHistory = occs.stream()
+                .flatMap(f -> f.getScoreHistory().stream())
+                .distinct()
+                .collect(Collectors.toList());
+
             // Initialize metadata for the primary detection pattern.
             ruleDict.putIfAbsent(
                 primary.getPatternName(), ScanReport.RuleDefinition.builder()
@@ -167,13 +175,13 @@ public class Reporter {
 
             return ScanReport.UniqueLeak.builder()
                 .primaryRuleId(primary.getPatternName())
-                .totalRisk(primary.getRiskScore())
-                .totalConfidence(primary.getConfidenceScore())
-                .aggregateScore(primary.getNumericScore(scoringConfig))
+                .totalRisk(maxRisk)
+                .totalConfidence(maxConfidence)
+                .aggregateScore(maxScore)
                 .secret(primary.getSecretValue())
                 .maskedSecret(primary.getMaskedSecret())
                 .hash(fingerprint)
-                .scoreHistory(primary.getScoreHistory())
+                .scoreHistory(combinedHistory)
                 .occurrences(occs.stream().map(f -> ScanReport.Occurrence.builder()
                     .relativePath(f.getContext().getPath().toString())
                     .absolutePath(f.getContext().getPath().toAbsolutePath().toString())

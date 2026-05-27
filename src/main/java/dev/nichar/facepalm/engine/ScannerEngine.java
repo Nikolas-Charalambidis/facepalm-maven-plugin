@@ -79,7 +79,7 @@ public class ScannerEngine {
             log.info("Discovered " + discoveredPaths.size() + " files...");
             for (final var path : discoveredPaths) {
                 stats.recordDiscovery();
-                if (!shouldScan(path, stats)) {
+                if (!shouldScan(root, path, stats)) {
                     continue;
                 }
                 stats.recordScan(path);
@@ -120,8 +120,19 @@ public class ScannerEngine {
     /**
      * Checks if a file qualifies for scanning based on size, type, and exclusion rules.
      */
-    private boolean shouldScan(@Nonnull final Path path, @Nonnull final ScanStatistics stats) {
+    private boolean shouldScan(@Nonnull final Path root,
+                               @Nonnull final Path path,
+                               @Nonnull final ScanStatistics stats) {
         final var engineConfig = context.getEngine();
+
+        if (isHiddenPath(root, path)) {
+            if (engineConfig.isShowSkipped()) {
+                log.debug("Skipping hidden path: " + path);
+            }
+            stats.recordExclusion(ExclusionReason.HIDDEN_PATH);
+            return false;
+        }
+
         final var skipDirs = engineConfig.getSkipDirs();
         for (final var element : path) {
             if (skipDirs.contains(element.toString())) {
@@ -158,6 +169,28 @@ public class ScannerEngine {
             return false;
         }
         return true;
+    }
+
+    /**
+     * Checks whether the file itself or any parent directory is hidden.
+     * Uses OS-specific hidden semantics (dot-prefix on Unix, file attributes on Windows).
+     */
+    private boolean isHiddenPath(@Nonnull final Path scanRoot, @Nonnull final Path path) {
+        try {
+            Path current = path;
+            while (current != null) {
+                if (Files.isHidden(current)) {
+                    return true;
+                }
+                if (current.equals(scanRoot)) {
+                    break;
+                }
+                current = current.getParent();
+            }
+        } catch (IOException e) {
+            return false;
+        }
+        return false;
     }
 
     /**

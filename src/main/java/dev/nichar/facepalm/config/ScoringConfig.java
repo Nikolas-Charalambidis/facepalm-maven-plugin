@@ -1,7 +1,6 @@
 /*
- * Licensed under Apache-2.0.
- * Copyright (c) 2026 Nikolas Charalambidis.
- * All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 Nikolas Charalambidis
  */
 
 package dev.nichar.facepalm.config;
@@ -27,7 +26,7 @@ public class ScoringConfig {
     /**
      * Minimum score to classify a finding as high-risk (Critical).
      */
-    private int errorThreshold = 80;
+    private int errorThreshold = 70;
 
     /**
      * Minimum score to classify a finding as moderate-risk (Warning).

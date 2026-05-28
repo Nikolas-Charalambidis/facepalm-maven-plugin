@@ -1,7 +1,6 @@
 /*
- * Licensed under Apache-2.0.
- * Copyright (c) 2026 Nikolas Charalambidis.
- * All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 Nikolas Charalambidis
  */
 
 package dev.nichar.facepalm.report;
@@ -45,14 +44,14 @@ public class Reporter {
     private static final String SEPARATOR = "-".repeat(72);
 
     @Inject
-    private dev.nichar.facepalm.FacepalmConfig context;
+    private FacepalmConfig context;
 
     private final Log log;
 
     private final Configuration cfg;
 
     @Inject
-    public Reporter(@Nullable final Log log, @Nonnull final FacepalmConfig context) {
+    public Reporter(@Nullable final Log log) {
         this.log = log != null ? log : new org.apache.maven.plugin.logging.SystemStreamLog();
         cfg = new Configuration(Configuration.VERSION_2_3_32);
         cfg.setClassForTemplateLoading(Reporter.class, "/templates");
@@ -157,6 +156,14 @@ public class Reporter {
             final var occs = entry.getValue();
             final var primary = occs.get(0);
 
+            final var maxRisk = occs.stream().mapToInt(Finding::getRiskScore).max().orElse(0);
+            final var maxConfidence = occs.stream().mapToInt(Finding::getConfidenceScore).max().orElse(0);
+            final var maxScore = occs.stream().mapToDouble(f -> f.getNumericScore(scoringConfig)).max().orElse(0.0);
+            final var combinedHistory = occs.stream()
+                .flatMap(f -> f.getScoreHistory().stream())
+                .distinct()
+                .collect(Collectors.toList());
+
             // Initialize metadata for the primary detection pattern.
             ruleDict.putIfAbsent(
                 primary.getPatternName(), ScanReport.RuleDefinition.builder()
@@ -168,13 +175,13 @@ public class Reporter {
 
             return ScanReport.UniqueLeak.builder()
                 .primaryRuleId(primary.getPatternName())
-                .totalRisk(primary.getRiskScore())
-                .totalConfidence(primary.getConfidenceScore())
-                .aggregateScore(primary.getNumericScore(scoringConfig))
+                .totalRisk(maxRisk)
+                .totalConfidence(maxConfidence)
+                .aggregateScore(maxScore)
                 .secret(primary.getSecretValue())
                 .maskedSecret(primary.getMaskedSecret())
                 .hash(fingerprint)
-                .scoreHistory(primary.getScoreHistory())
+                .scoreHistory(combinedHistory)
                 .occurrences(occs.stream().map(f -> ScanReport.Occurrence.builder()
                     .relativePath(f.getContext().getPath().toString())
                     .absolutePath(f.getContext().getPath().toAbsolutePath().toString())

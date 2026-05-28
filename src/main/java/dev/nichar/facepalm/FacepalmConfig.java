@@ -1,7 +1,6 @@
 /*
- * Licensed under Apache-2.0.
- * Copyright (c) 2026 Nikolas Charalambidis.
- * All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 Nikolas Charalambidis
  */
 
 package dev.nichar.facepalm;
@@ -13,7 +12,7 @@ import dev.nichar.facepalm.config.PostProcessorConfig;
 import dev.nichar.facepalm.config.ScoringConfig;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
 
 /**
  * Root configuration object for the Facepalm plugin.
@@ -21,7 +20,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Data
 @AllArgsConstructor
-@RequiredArgsConstructor
+@NoArgsConstructor
 public class FacepalmConfig {
 
     /**

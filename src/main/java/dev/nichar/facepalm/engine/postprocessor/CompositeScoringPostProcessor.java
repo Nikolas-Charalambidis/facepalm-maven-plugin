@@ -1,7 +1,6 @@
 /*
- * Licensed under Apache-2.0.
- * Copyright (c) 2026 Nikolas Charalambidis.
- * All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright 2026 Nikolas Charalambidis
  */
 
 package dev.nichar.facepalm.engine.postprocessor;
@@ -46,7 +45,7 @@ class CompositeScoringPostProcessor implements FileFindingsPostProcessor {
                 finding.log("High Volume File (Threshold: " + conf.getHighVolumeThreshold() + ")", -25, -30);
             }
             // Elevate risk if a single file contains multiple distinct secret types.
-            else if (uniquePatterns > 1) {
+            if (uniquePatterns > 1) {
                 // Increases risk because a file containing multiple secret types is statistically more likely to be a
                 // real credential leak.
                 finding.log("Composite Risk: Multiple distinct secrets in one file", 15, 10);

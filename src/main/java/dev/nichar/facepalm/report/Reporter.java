@@ -21,7 +21,6 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.Instant;
-import java.util.Base64;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -147,13 +146,12 @@ public class Reporter {
 
         // Group findings by unique secret fingerprints for deduplicated reporting.
         final var grouped = findings.stream()
-            .collect(Collectors.groupingBy(f -> Base64.getEncoder().encodeToString((f.getPatternName() + ":" + f
-                .getMaskedSecret()).getBytes(StandardCharsets.UTF_8))));
+            .collect(Collectors.groupingBy(Finding::getDeduplicationHash));
 
         final var ruleDict = new HashMap<String, ScanReport.RuleDefinition>();
 
         final var leaks = grouped.entrySet().stream().map(entry -> {
-            final var fingerprint = entry.getKey();
+            final var deduplicationHash = entry.getKey();
             final var occs = entry.getValue();
             final var primary = occs.get(0);
 
@@ -181,7 +179,7 @@ public class Reporter {
                 .aggregateScore(maxScore)
                 .secret(primary.getSecretValue())
                 .maskedSecret(primary.getMaskedSecret())
-                .hash(fingerprint)
+                .hash(deduplicationHash)
                 .scoreHistory(combinedHistory)
                 .occurrences(occs.stream().map(f -> ScanReport.Occurrence.builder()
                     .relativePath(f.getContext().getPath().toString())

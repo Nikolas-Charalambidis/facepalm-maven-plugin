@@ -25,6 +25,7 @@ import java.util.Base64;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -228,6 +229,7 @@ public class Reporter {
                     final var severity = f.getSeverity(scoringConfig);
 
                     final var message = String.format(
+                        Locale.ROOT,
                         "[%s] Score: %.1f (R:%d/C:%d) - %s",
                         f.getPatternName(), f.getNumericScore(scoringConfig),
                         f.getRiskScore(), f.getConfidenceScore(),
@@ -254,7 +256,8 @@ public class Reporter {
                 .sum());
             if (log.isDebugEnabled()) {
                 stats.getExclusionBreakdown().forEach(
-                    (key, value) -> log.debug(String.format("  %s: %d", key.getDescription(), value.sum())));
+                    (key, value) -> log.debug(String.format(Locale.ROOT, "  %s: %d", key.getDescription(), value
+                        .sum())));
             }
             log.info("Files scanned:    " + stats.getFilesScanned().sum());
 

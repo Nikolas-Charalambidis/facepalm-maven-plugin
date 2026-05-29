@@ -9,6 +9,7 @@ import dev.nichar.facepalm.config.ScoringConfig;
 import jakarta.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -56,7 +57,7 @@ public class Finding {
     public void log(@Nonnull final String rule, final int rDelta, final int cDelta) {
         riskScore = Math.max(0, Math.min(100, riskScore + rDelta));
         confidenceScore = Math.max(0, Math.min(100, confidenceScore + cDelta));
-        scoreHistory.add(String.format("%s (%+d/%+d)", rule, rDelta, cDelta));
+        scoreHistory.add(String.format(Locale.ROOT, "%s (%+d/%+d)", rule, rDelta, cDelta));
     }
 
     /**

@@ -14,4 +14,39 @@
     <rule ref="category/java/codestyle.xml/LocalVariableCouldBeFinal"/>
     <rule ref="category/java/codestyle.xml/MethodArgumentCouldBeFinal"/>
 
+    <!-- Flags String.format calls without an explicit Locale. -->
+    <rule name="UseLocaleWithStringFormat"
+          language="java"
+          message="String.format() called without an explicit Locale; use String.format(Locale.ROOT, …) for locale-neutral output."
+          class="net.sourceforge.pmd.lang.rule.xpath.XPathRule">
+        <description>
+            String.format(format, args…) is locale-sensitive for %f, %e, %g, and %t
+            conversion specifiers. Always supply an explicit Locale (Locale.ROOT for
+            machine/test output) as the first argument.
+        </description>
+        <priority>2</priority>
+        <properties>
+            <property name="xpath">
+                <value>
+<![CDATA[
+//MethodCall[
+    @MethodName = 'format'
+    and pmd-java:typeIs('java.lang.String')
+    and not(pmd-java:typeIs(ArgumentList/*[1], 'java.util.Locale'))
+]
+]]>
+                </value>
+            </property>
+        </properties>
+        <example>
+<![CDATA[
+// BAD - locale-sensitive on EU JVMs
+String s = String.format("%.1f", 69.8);
+
+// GOOD - always locale-neutral
+String s = String.format(Locale.ROOT, "%.1f", 69.8);
+]]>
+        </example>
+    </rule>
+
 </ruleset>

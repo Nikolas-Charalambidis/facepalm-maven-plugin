@@ -10,6 +10,7 @@ import dev.nichar.facepalm.engine.Finding;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -32,10 +33,10 @@ class EntropyEvaluator implements FindingEvaluator {
         final var entropy = getShannonEntropy(finding.getSecretValue());
         if (entropy > 4.5) {
             // Random strings typical of API keys or passwords.
-            finding.log(String.format("High Entropy (%.2f)", entropy), 10, 20);
+            finding.log(String.format(Locale.ROOT, "High Entropy (%.2f)", entropy), 10, 20);
         } else if (entropy < 3.0) {
             // Repetitive or predictable strings likely to be noise.
-            finding.log(String.format("Low Entropy (%.2f)", entropy), 0, -40);
+            finding.log(String.format(Locale.ROOT, "Low Entropy (%.2f)", entropy), 0, -40);
         }
     }
 

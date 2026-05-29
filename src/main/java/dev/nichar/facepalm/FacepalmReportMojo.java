@@ -181,7 +181,7 @@ public class FacepalmReportMojo extends AbstractMavenReport {
                 // Final Score Column
                 sink.tableCell();
                 sink.bold();
-                sink.text(String.format("%.1f", finding.getFinalScore()));
+                sink.text(String.format(Locale.ROOT, "%.1f", finding.getFinalScore()));
                 sink.bold_();
                 sink.tableCell_();
 

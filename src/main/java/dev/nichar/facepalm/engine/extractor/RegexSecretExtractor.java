@@ -16,6 +16,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -124,7 +125,7 @@ public class RegexSecretExtractor implements SecretExtractor {
             final var hash = messageDigest.digest(input.getBytes(StandardCharsets.UTF_8));
             final var hexString = new StringBuilder();
             for (final var b : hash) {
-                hexString.append(String.format("%02x", b));
+                hexString.append(String.format(Locale.ROOT, "%02x", b));
             }
             return hexString.toString();
         } catch (NoSuchAlgorithmException e) {
